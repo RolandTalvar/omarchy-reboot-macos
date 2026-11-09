@@ -78,7 +78,13 @@ To remove only the integration while retaining the plugin checkout:
 python3 ~/.config/omarchy/plugins/rolandtlvr.reboot-macos/setup.py remove
 ```
 
-If automatic cleanup fails, inspect `journalctl -u omarchy-reboot-macos-cleanup.service` and rerun the explicit removal command. Older user-made backup files remain intentionally. Migration from the pre-plugin local customization restores stock Shutdown; already-lost settings cannot be reconstructed.
+Removal revokes the sudo rule and helper before attempting menu restoration. If the menu is temporarily invalid, the retained root-owned cleanup service retries every 15 seconds; fix the menu and it completes automatically. Inspect `journalctl -u omarchy-reboot-macos-cleanup.service` for diagnostics. If the checkout is already gone, the retained trusted cleanup code can also be invoked directly:
+
+```sh
+pkexec /usr/bin/python3 -I /usr/local/lib/omarchy-reboot-macos/lifecycle.py remove "$USER" "${XDG_CONFIG_HOME:-$HOME/.config}" -
+```
+
+If that code was itself removed by an interrupted final cleanup, obtain a fresh checkout and run `setup.py remove`; removal is idempotent and does not need the old units or helper to exist. Older user-made backup files remain intentionally. Migration from the pre-plugin local customization restores stock Shutdown; already-lost settings cannot be reconstructed.
 
 ## Development
 

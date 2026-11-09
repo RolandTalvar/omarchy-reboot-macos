@@ -67,21 +67,36 @@ def write_root(path,text,mode=0o644):
         sync_directory(path.parent)
     finally: Path(temp).unlink(missing_ok=True)
 
+def unlink_synced(path):
+    if path.exists() or path.is_symlink():
+        path.unlink()
+        sync_directory(path.parent)
+
+
+def stop_watcher():
+    if (UNITS/(UNIT+'.path')).exists():
+        run('/usr/bin/systemctl','disable','--now',UNIT+'.path')
+    else:
+        if watcher_state()['active']: run('/usr/bin/systemctl','stop',UNIT+'.path')
+        unlink_synced(UNITS/'multi-user.target.wants'/(UNIT+'.path'))
+
+
 def remove(record):
-    # Restore user menu while trusted code still exists; drop privileges first.
-    # Failed restoration leaves the installation available for recovery.
+    # Revoke access first, even if an invalid user menu needs later repair.
+    unlink_synced(RULE)
+    unlink_synced(HELPER)
     menu_code = LIB/'menu_state.py'
     if menu_code.exists():
         run('/usr/bin/runuser','-u',record['account'],'--','/usr/bin/python3','-I',str(menu_code),'remove',record['config'])
-    run('/usr/bin/systemctl','disable','--now',UNIT+'.path')
-    for suffix in ['path','service']: (UNITS/(UNIT+'.'+suffix)).unlink(missing_ok=True)
-    RULE.unlink(missing_ok=True)
-    HELPER.unlink(missing_ok=True)
-    RECORD.unlink(missing_ok=True)
-    # Only our fixed installation directory, never a supplied path.
-    if LIB.exists(): shutil.rmtree(LIB)
-    run('/usr/bin/systemctl','daemon-reload')
     run('/usr/bin/visudo','-c')
+    stop_watcher()
+    for suffix in ['path','service']: unlink_synced(UNITS/(UNIT+'.'+suffix))
+    run('/usr/bin/systemctl','daemon-reload')
+    if LIB.exists(): shutil.rmtree(LIB)
+    # Keep the record until every other component is gone, so a fresh copy of
+    # the installer can resume even if the installed cleanup code was removed.
+    unlink_synced(RECORD)
+
 
 def watcher_state():
     state = {}
@@ -247,7 +262,7 @@ def stage_installation(account, config, source):
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'
     watch = str(plugin.parent).replace('%','%%')
     write_root(stage/(UNIT+'.path'), f'[Unit]\nDescription=Watch for removal of the macOS reboot plugin\n\n[Path]\nPathChanged={watch}\nUnit={UNIT}.service\n\n[Install]\nWantedBy=multi-user.target\n')
-    write_root(stage/(UNIT+'.service'), f'[Unit]\nDescription=Clean up removed macOS reboot plugin\n\n[Service]\nType=oneshot\nExecStartPre=/usr/bin/sleep 2\nExecStart=/usr/bin/python3 -I {LIB}/lifecycle.py check\n')
+    write_root(stage/(UNIT+'.service'), f'[Unit]\nDescription=Clean up removed macOS reboot plugin\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nRestart=on-failure\nRestartSec=15s\nExecStartPre=/usr/bin/sleep 2\nExecStart=/usr/bin/python3 -I {LIB}/lifecycle.py check\n')
     run('/usr/bin/systemd-analyze', 'verify', str(stage/(UNIT+'.path')),
         str(stage/(UNIT+'.service')))
     return stage
@@ -336,17 +351,17 @@ def dispatch(args):
         if mode=='install': install(account,config,source)
         else:
             if TRANSACTION.exists(): recover_installation()
-            remove_for_account(account)
+            remove_for_account(account, config)
     else: raise ValueError('Invalid setup operation')
 
 
-def remove_for_account(account):
+def remove_for_account(account, config):
     if RECORD.exists():
         record=json.loads(RECORD.read_text())
         if record['account']!=account: raise ValueError('Installation belongs to another user')
         remove(record)
     else:
         # Compatibility cleanup for installations before the watcher.
-        RULE.unlink(missing_ok=True);HELPER.unlink(missing_ok=True)
+        remove({'account':account,'config':str(Path(config).resolve())})
 
 if __name__=='__main__': main(sys.argv[1:])

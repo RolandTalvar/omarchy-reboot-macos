@@ -39,6 +39,6 @@ class LifecycleTests(unittest.TestCase):
         import subprocess
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);(root/'menu_state.py').touch()
-            with patch.object(lifecycle,'LIB',root),patch.object(lifecycle,'run',side_effect=subprocess.CalledProcessError(1,'restore')):
+            with patch.multiple(lifecycle,LIB=root,HELPER=root/'helper',RULE=root/'rule',RECORD=root/'record',UNITS=root/'units'),patch.object(lifecycle,'run',side_effect=subprocess.CalledProcessError(1,'restore')):
                 with self.assertRaises(subprocess.CalledProcessError):lifecycle.remove({'account':'user','config':'/home/user/.config'})
                 self.assertTrue((root/'menu_state.py').exists())
