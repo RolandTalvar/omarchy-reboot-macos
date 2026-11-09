@@ -242,12 +242,17 @@ def recover_installation():
     if saved['menu_started']:
         user_menu(stage, 'rollback', saved['record'])
     run('/usr/bin/systemctl', 'daemon-reload')
-    if not saved['watcher']['enabled'] or not saved['watcher']['active']:
+    previous=json.loads(RECORD.read_text()) if RECORD.exists() else saved['record']
+    if not Path(previous['plugin']).exists():
+        revoke_access(previous['account'])
         stop_watcher()
-    if saved['watcher']['enabled']:
-        run('/usr/bin/systemctl', 'enable', UNIT+'.path')
-    if saved['watcher']['active']:
-        run('/usr/bin/systemctl', 'start', UNIT+'.path')
+    else:
+        if not saved['watcher']['enabled'] or not saved['watcher']['active']:
+            stop_watcher()
+        if saved['watcher']['enabled']:
+            run('/usr/bin/systemctl', 'enable', UNIT+'.path')
+        if saved['watcher']['active']:
+            run('/usr/bin/systemctl', 'start', UNIT+'.path')
     if RULE.exists(): run('/usr/bin/visudo', '-cf', str(RULE))
     finish_transaction()
 

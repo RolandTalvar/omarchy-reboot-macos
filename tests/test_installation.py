@@ -217,3 +217,16 @@ class TransactionTests(unittest.TestCase):
             return real(path,text,*args,**kwargs)
         with patch.object(lifecycle,'write_root',side_effect=write):f.install()
         self.assertTrue(f.helper.exists());self.assertTrue(f.record.exists());self.assertFalse(f.transaction.exists())
+
+    def test_recovery_never_reenables_access_for_a_removed_plugin(self):
+        f=self.fixture;f.seed_old_install();f.active=True;f.fail_menu='install';real=lifecycle.recover_installation;calls=0
+        def interrupt():
+            nonlocal calls
+            calls+=1
+            if calls==2:raise OSError('Interrupted rollback')
+            return real()
+        with patch.object(lifecycle,'recover_installation',side_effect=interrupt):
+            with self.assertRaises(OSError):f.install()
+        lifecycle.shutil.rmtree(f.plugin);real()
+        self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
+        self.assertFalse(f.enabled or f.active);self.assertFalse(f.transaction.exists())
