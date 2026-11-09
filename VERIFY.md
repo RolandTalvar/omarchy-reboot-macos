@@ -7,6 +7,13 @@
 - The next-boot write and reboot actions are mocked in automated tests. Listing candidates does not select a target.
 - Removal watcher checks are event-driven; a short delay tolerates a plugin's atomic replacement during updates. A merely missing manifest in an existing directory does not trigger cleanup.
 
+## Completed live checks
+
+- The installed password-free helper identified macOS Sequoia as a sealed macOS candidate and Omarchy as an unsealed/unknown stub, using APFS metadata rather than label patterns.
+- Normal `omarchy plugin remove` triggered the root watcher and restored the System menu. The helper, trusted library directory, root installation record, sudo entry, watcher unit files, and enabled path link were removed. The removed helper was no longer callable through sudo.
+- Native confirmation and volume-picker previews rendered in English, Estonian, Arabic, and Hebrew. Layout mirrored for Arabic/Hebrew, long text wrapped, and markup-shaped volume names remained literal text. This is rendering verification, not native-speaker linguistic review.
+- Live menu labels switched from Estonian to French in an isolated QML instance without a restart; the desktop user's language was unchanged.
+
 ## Full boot cycle — pending user execution
 
 This check interrupts the session. Save work first and perform it when ready:
