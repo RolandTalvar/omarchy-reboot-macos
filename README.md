@@ -69,6 +69,8 @@ If automatic cleanup fails, inspect `journalctl -u omarchy-reboot-macos-cleanup.
 
 ## Development
 
+GitHub Actions runs the regression suite, Python/shell syntax checks, and Omarchy’s manifest validator on every pull request and push to `main`, using Python 3.11–3.14. Actions and the upstream validator are pinned to immutable commits. Tests use a disposable installation prefix and mock boot/system commands; CI does not require Apple hardware or root access. QML rendering and full boot-cycle checks remain separate hardware checks.
+
 ```sh
 omarchy plugin validate .
 python3 -m unittest discover -s tests -v

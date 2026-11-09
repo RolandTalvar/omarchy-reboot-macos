@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13', '3.14']
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate the Omarchy plugin manifest
+        env:
+          VALIDATOR_URL: https://raw.githubusercontent.com/omacom/omarchy/cbd0029fddcfcae0b73cf1c01a1c6031eae98f99/bin/omarchy-plugin-validate
+        run: |
+          curl --fail --location --silent --show-error --retry 3 "$VALIDATOR_URL" -o "$RUNNER_TEMP/omarchy-plugin-validate"
+          bash "$RUNNER_TEMP/omarchy-plugin-validate" .
+      - name: Check Python and shell syntax
+        run: |
+          python -m compileall -q .
+          bash -n setup-root
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -v
