@@ -333,3 +333,13 @@ class TransactionTests(unittest.TestCase):
         f.fail_menu='install'
         with self.assertRaises(OSError):f.install()
         self.assertFalse(f.transaction.exists());self.assertFalse(link.is_symlink())
+
+    def test_config_directory_change_is_rejected_without_orphaning_old_menu(self):
+        f=self.fixture;f.install();before=f.files();menu=f.menu.read_bytes()
+        other=f.root/'other-config';plugin=other/'omarchy/plugins/rolandtlvr.reboot-macos'
+        plugin.mkdir(parents=True);(plugin/'manifest.json').write_text('{}')
+        with self.assertRaisesRegex(ValueError,'before changing the config directory'):
+            lifecycle.install('user',str(other),Path(__file__).resolve().parents[1])
+        self.assertEqual(f.files(),before);self.assertEqual(f.menu.read_bytes(),menu)
+        self.assertFalse((other/'omarchy/reboot-macos-menu-state.json').exists())
+        self.assertEqual(__import__('json').loads(f.record.read_text())['config'],str(f.config))

@@ -347,14 +347,16 @@ def install(account, config, source):
     user = pwd.getpwnam(account)
     if user.pw_uid == 0: raise ValueError('Install for a desktop user, not root')
     recover_installation()
+    config = Path(config).resolve()
     if RECORD.exists() and json.loads(RECORD.read_text())['account'] != account:
         raise ValueError('This helper is already installed for another user')
     if RECORD.exists():
         previous=json.loads(RECORD.read_text())
+        if Path(previous['config']).resolve() != config:
+            raise ValueError('Remove the existing installation before changing the config directory')
         if not Path(previous['plugin']).exists():
             cleanup_requested(previous)
             raise ValueError('Removed plugin cleanup completed; install the Omarchy plugin first')
-    config = Path(config).resolve()
     if any(ord(ch) < 32 for ch in str(config)): raise ValueError('Unsupported config path')
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'
     if not (plugin/'manifest.json').is_file(): raise ValueError('Install the Omarchy plugin first')
