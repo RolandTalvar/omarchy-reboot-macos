@@ -1,0 +1,26 @@
+name: Translation review
+description: Review a translation as a fluent or native speaker
+title: "Translation review: "
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language code
+      placeholder: et, ar, pt-BR
+    validations:
+      required: true
+  - type: textarea
+    id: corrections
+    attributes:
+      label: Review and corrections
+      description: Include confirmation wording, Yes/No meaning, picker, errors, and any layout issues. Please say whether you tested the actual dialog.
+    validations:
+      required: true
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Checks performed
+      options:
+        - label: I am fluent in this language and reviewed the reboot confirmation and buttons.
+        - label: I verified placeholders preserve the disk name exactly.
+        - label: I checked the rendered native dialog, including mixed-direction disk names where relevant.

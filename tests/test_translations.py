@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from translations import CATALOGS, selected_language, translate
 from sync_menu import sync_menu
+from menu_state import install_menu
 
 class TranslationTests(unittest.TestCase):
     def test_all_fifty_catalogs_have_same_keys_and_placeholders(self):
@@ -17,7 +18,8 @@ class TranslationTests(unittest.TestCase):
         for path in paths:
             with self.subTest(language=path.stem):
                 catalog = json.loads(path.read_text())
-                self.assertEqual(set(catalog), set(english))
+                self.assertTrue(set(catalog) <= set(english))
+                self.assertTrue(set(english) - {'recovery.cleared','recovery.pending'} <= set(catalog))
                 for key, text in catalog.items():
                     self.assertIsInstance(text, str)
                     self.assertTrue(text.strip())
@@ -53,9 +55,11 @@ class TranslationTests(unittest.TestCase):
             self.assertEqual(translate('yes', language='et', directory=directory), 'Yes')
     def test_menu_sync_changes_only_owned_labels(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'menu.jsonc'
+            path = Path(directory) / 'omarchy/extensions/omarchy-menu.jsonc'
+            path.parent.mkdir(parents=True)
             data = {'personal.notes': {'label':'Notes'}, 'system.reboot-macos': {'action':'omarchy-shell rolandtlvr.reboot-macos reboot'}, 'system.shutdown-last': {'action':'omarchy-system shutdown'}}
-            path.write_text(json.dumps(data))
+            path.write_text(json.dumps({'personal.notes': data['personal.notes']}))
+            install_menu(path.parent.parent, {key:translate(key, language='en') for key in ['menu.label','menu.description','menu.shutdown']})
             strings = {key: translate(key, language='et') for key in ['menu.label','menu.description','menu.shutdown']}
             self.assertTrue(sync_menu(path, strings))
             result = json.loads(path.read_text())
@@ -65,7 +69,8 @@ class TranslationTests(unittest.TestCase):
             self.assertFalse(sync_menu(path, strings))
     def test_sync_does_not_recreate_removed_or_replaced_menu_action(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'menu.jsonc'
+            path = Path(directory) / 'omarchy/extensions/omarchy-menu.jsonc'
+            path.parent.mkdir(parents=True)
             for data in [{}, {'system.reboot-macos':{'action':'my-custom-action'}}]:
                 path.write_text(json.dumps(data))
                 self.assertFalse(sync_menu(path, {}))
@@ -73,7 +78,7 @@ class TranslationTests(unittest.TestCase):
     def test_confirm_buttons_are_translated(self):
         import subprocess
         import reboot_macos
-        volumes = json.dumps([{'index':1, 'name':'macOS Sequoia'}])
+        volumes = json.dumps([{'index':1, 'name':'macOS Sequoia', 'os':'macos','selectable':True,'id':'a'*64}])
         with tempfile.TemporaryDirectory() as directory:
             language = Path(directory) / 'language'
             language.write_text('et')

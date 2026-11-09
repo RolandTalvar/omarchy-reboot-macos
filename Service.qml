@@ -42,16 +42,11 @@ Item {
     }
   }
 
+  Confirmation { id: confirmation }
+
   IpcHandler {
     target: "rolandtlvr.reboot-macos"
-    function reboot(): void {
-      var script = Qt.resolvedUrl("reboot_macos.py").toString()
-      if (script.indexOf("file://") !== 0) return
-      // Quickshell passes argv directly; presentation wrapper gets a quoted path.
-      var path = decodeURIComponent(script.slice(7))
-      var quoted = "'" + path.replace(/'/g, "'\\''") + "'"
-      Quickshell.execDetached(["omarchy-launch-floating-terminal-with-presentation", "/usr/bin/python3 -B " + quoted])
-    }
+    function reboot(): void { confirmation.open() }
     function ping(): string { return "ready" }
   }
 }

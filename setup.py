@@ -1,72 +1,36 @@
 #!/usr/bin/python3
-"""Explicit setup for menu ownership and privileged helper installation."""
-import datetime
-import json
+"""Explicit installation and removal of the menu and privileged components."""
 import os
 from pathlib import Path
 import pwd
-import re
-import shutil
 import subprocess
 import sys
+from menu_state import install_menu, read_menu, remove_menu, paths, items, KEYS
 from translations import translate as t
 
 ID = 'rolandtlvr.reboot-macos'
-KEYS = ['system.reboot-macos', 'system.shutdown', 'system.shutdown-last']
-
-def read_menu(path):
-    if not path.exists():
-        return {}
-    text = re.sub(r'^\s*//[^\n]*(\n|$)', '', path.read_text(), flags=re.M)
-    return json.loads(re.sub(r',\s*([}\]])', r'\1', text))
 
 def main():
-    if sys.argv[1:] not in [['install'], ['remove']]:
-        raise SystemExit('Usage: python3 setup.py install|remove')
+    if sys.argv[1:] not in [['install'],['remove']]: raise SystemExit('Usage: python3 setup.py install|remove')
     mode = sys.argv[1]
     source = Path(__file__).resolve().parent
-    root = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'omarchy'
-    menu = root / 'extensions/omarchy-menu.jsonc'
-    state = root / 'reboot-macos-menu-backup.json'
-    data = read_menu(menu)
-    items = data.setdefault('items', {}) if 'items' in data else data
-    # Read and preserve existing entries before requesting administrator rights.
-    previous = {key: items.get(key) for key in KEYS}
-    subprocess.run(['pkexec', '/bin/bash', str(source / 'setup-root'), mode, pwd.getpwuid(os.getuid()).pw_name], check=True)
-    stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-    menu.parent.mkdir(parents=True, exist_ok=True)
-    if menu.exists():
-        shutil.copy2(menu, str(menu) + '.bak.' + stamp)
+    config = Path(os.environ.get('XDG_CONFIG_HOME',Path.home()/'.config')).resolve()
+    account = pwd.getpwuid(os.getuid()).pw_name
     if mode == 'install':
-        if not state.exists():
-            state.write_text(json.dumps(previous, indent=2) + '\n')
-        items['system.reboot-macos'] = {
-            'icon': '󰀵', 'label': t('menu.label'),
-            'description': t('menu.description'),
-            'searchTerms': ['Reboot into macOS'],
-            'when': f'omarchy-shell {ID} ping',
-            'action': f'omarchy-shell {ID} reboot',
-        }
-        # User entries append after stock entries: move Shutdown after ours.
-        items['system.shutdown'] = {'when': 'false'}
-        items['system.shutdown-last'] = {'icon': '󰐥', 'label': t('menu.shutdown'), 'action': 'omarchy-system shutdown'}
-    else:
-        # Remove our rows and restore stock Shutdown. Never restore the obsolete
-        # machine-specific reboot action whose privilege rule was retired.
-        previous = json.loads(state.read_text()) if state.exists() else {}
-        for key in KEYS:
-            value = previous.get(key)
-            if key in ['system.reboot-macos', 'system.shutdown-last']:
-                value = None
-            if key == 'system.shutdown' and value == {'when': 'false'}:
-                value = None
-            if value is None:
-                items.pop(key, None)
-            else:
-                items[key] = value
-        state.unlink(missing_ok=True)
-    menu.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
+        menu,state = paths(config/'omarchy')
+        current = items(read_menu(menu))
+        legacy = config/'omarchy/reboot-macos-menu-backup.json'
+        if not state.exists() and not legacy.exists() and any(current.get(key) is not None for key in [KEYS[0],KEYS[2]]):
+            raise ValueError('Existing menu row conflicts with this plugin; resolve it before setup.')
+    # Root setup records its own validated config paths, not future input.
+    subprocess.run(['pkexec','/usr/bin/python3','-I',str(source/'lifecycle.py'),mode,account,str(config),str(source)],check=True)
+    if mode == 'install':
+        strings={key:t(key) for key in ['menu.label','menu.description','menu.shutdown']}
+        stock_path=Path(os.environ.get('OMARCHY_PATH','/usr/share/omarchy'))/'default/omarchy/omarchy-menu.jsonc'
+        stock=read_menu(stock_path).get('system.shutdown') if stock_path.exists() else None
+        if stock: stock['label']=strings['menu.shutdown']
+        install_menu(config/'omarchy',strings,stock)
+    else: remove_menu(config/'omarchy')
     print(f'Menu and privileged helper {mode} complete.')
 
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__': main()

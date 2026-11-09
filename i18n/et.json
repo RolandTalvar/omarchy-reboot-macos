@@ -3,8 +3,10 @@
   "menu.description": "Käivita macOS üks kord; Linux jääb vaikimisi süsteemiks",
   "menu.shutdown": "Lülita välja",
   "confirm": "Kas taaskäivitada macOS-i (%1)? Enne jätkamist salvesta oma töö.",
-  "picker": "Vali macOS-i köide (automaatne tuvastamine oli ebaselge):",
+  "picker": "Vali macOS-i köide (metaandmed ei tuvastanud ühte kindlat süsteemi):",
   "yes": "Jah",
   "no": "Ei",
-  "failed": "macOS-i taaskäivitamine ebaõnnestus."
+  "failed": "macOS-i taaskäivitamine ebaõnnestus.",
+  "recovery.cleared": "Taaskäivitamine ebaõnnestus. Ühekordne käivitusvalik tühistati; vaikimisi käivitussüsteem ei muutunud.",
+  "recovery.pending": "Taaskäivitamine ebaõnnestus ja ühekordset valikut ei saanud tühistada. Järgmine käsitsi taaskäivitus võib endiselt käivitada macOS-i."
 }

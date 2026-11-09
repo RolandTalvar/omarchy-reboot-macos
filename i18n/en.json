@@ -3,8 +3,10 @@
   "menu.description": "Boot macOS once; keep Linux as the default",
   "menu.shutdown": "Shutdown",
   "confirm": "Reboot into macOS (%1)? Save your work before continuing.",
-  "picker": "Select your macOS volume (automatic detection was ambiguous):",
+  "picker": "Select your macOS volume (metadata could not identify a single system):",
   "yes": "Yes",
   "no": "No",
-  "failed": "Unable to reboot into macOS."
+  "failed": "Unable to reboot into macOS.",
+  "recovery.cleared": "The reboot failed. The one-time boot selection was cleared; your default startup system is unchanged.",
+  "recovery.pending": "The reboot failed and the one-time selection could not be cleared. Your next manual restart may still boot macOS."
 }

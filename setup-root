@@ -1,33 +1,5 @@
 #!/bin/bash
+# Compatibility entry point; setup.py is the documented installer.
 set -euo pipefail
-[[ $EUID == 0 ]] || { echo 'Administrator authentication required.' >&2; exit 1; }
-mode=${1:-}
-account=${2:-}
-[[ $account =~ ^[a-z_][a-z0-9_-]*$ ]] && getent passwd "$account" >/dev/null
-rule=/etc/sudoers.d/90-omarchy-reboot-macos-plugin
-helper=/usr/local/libexec/omarchy-reboot-macos-helper
-case $mode in
-  install)
-    [[ -x /usr/bin/asahi-bless ]] || { echo 'Install asahi-bless first.' >&2; exit 1; }
-    source_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-    temp=$(mktemp /etc/sudoers.d/.reboot-macos.XXXXXX)
-    trap 'rm -f "$temp"' EXIT
-    printf '%s\n' "$account ALL=(root) NOPASSWD: $helper --list, $helper ^--select-next [0-9]+$" > "$temp"
-    chmod 0440 "$temp"
-    /usr/bin/visudo -cf "$temp"
-    install -D -o root -g root -m 0755 "$source_dir/boot_helper.py" "$helper"
-    [[ ! -e $rule ]] || cp -p "$rule" "$rule.bak"
-    mv "$temp" "$rule"
-    # Retire the earlier machine-specific rule created before this plugin.
-    if [[ -f /etc/sudoers.d/90-omarchy-reboot-macos ]] &&
-       [[ $(cat /etc/sudoers.d/90-omarchy-reboot-macos) == "$account ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot macOS Sequoia --yes" ]]; then
-      cp -p /etc/sudoers.d/90-omarchy-reboot-macos /root/omarchy-reboot-macos-legacy-rule.bak
-      rm /etc/sudoers.d/90-omarchy-reboot-macos
-    fi
-    ;;
-  remove)
-    rm -f "$rule" "$helper"
-    ;;
-  *) echo 'Usage: setup-root install|remove USER' >&2; exit 2 ;;
-esac
-/usr/bin/visudo -c
+source_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+exec /usr/bin/python3 -I "$source_dir/lifecycle.py" "${1:?install or remove}" "${2:?user}" "${3:-/home/${2}/.config}" "$source_dir"
