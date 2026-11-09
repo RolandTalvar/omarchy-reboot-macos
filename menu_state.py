@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import threading
 
 ID = 'rolandtlvr.reboot-macos'
 KEYS = ['system.reboot-macos', 'system.shutdown', 'system.shutdown-last']
@@ -37,12 +38,21 @@ def atomic_write(path, text):
 
 def write_json(path, data): atomic_write(path, json.dumps(data, indent=2, ensure_ascii=False) + '\n')
 
+_held_locks = threading.local()
+
 @contextmanager
 def locked(root):
     root.mkdir(parents=True, exist_ok=True)
+    key = str(root.resolve())
+    held = getattr(_held_locks, 'roots', set())
+    if key in held:
+        yield
+        return
     with (root / '.reboot-macos-menu.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        yield
+        _held_locks.roots = held | {key}
+        try: yield
+        finally: _held_locks.roots = held
 
 def paths(root): return root / 'extensions/omarchy-menu.jsonc', root / 'reboot-macos-menu-state.json'
 
@@ -229,5 +239,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 3 or sys.argv[1] != 'remove': raise SystemExit('Usage: menu_state.py remove CONFIG_HOME')
     root = Path(sys.argv[2]) / 'omarchy'
     remove_menu(root)
-    (root / '.reboot-macos-menu.lock').unlink(missing_ok=True)
 
