@@ -45,3 +45,13 @@ class MenuTransactionTests(unittest.TestCase):
         self.assertFalse(self.f.menu.exists())
         self.assertFalse((self.root/menu_install.SNAPSHOT).exists())
         self.assertFalse((self.root/'reboot-macos-menu-state.json').exists())
+
+    def test_language_change_cannot_leave_partial_rows_after_rollback(self):
+        menu_install.install(self.root)
+        menu_state.sync_strings(self.root,{'menu.label':'Taaskäivita macOS-i','menu.description':'Üks kord','menu.shutdown':'Lülita välja'})
+        menu_install.rollback(self.root)
+        result=menu_state.read_menu(self.f.menu)
+        self.assertNotIn('system.reboot-macos',result);self.assertNotIn('system.shutdown-last',result)
+        menu_install.install(self.root)
+        self.assertIn('system.reboot-macos',menu_state.read_menu(self.f.menu))
+        menu_install.commit(self.root)

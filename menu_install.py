@@ -82,6 +82,11 @@ def rollback(root):
             elif name==FILES[0] and c is not None:
                 original=parse_menu(text(a));installed=parse_menu(text(b));now=parse_menu(text(c))
                 merged=undo(original,installed,now)
+                for key in [KEYS[0],KEYS[2]]:
+                    introduced=items(installed).get(key,{})
+                    current_row=items(now).get(key,{})
+                    if key not in items(original) and introduced.get('action') is not None and current_row.get('action')==introduced['action']:
+                        items(merged).pop(key,None)
                 changes={key:items(merged).get(key) for key in KEYS
                          if items(original).get(key)!=items(installed).get(key)}
                 value=patch_rows(text(c),changes)
