@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from menu_state import install_menu,remove_menu,sync_strings,read_menu,paths
+from menu_state import install_menu,remove_menu,sync_strings,read_menu,paths,patch_rows,parse_menu
 
 STRINGS={'menu.label':'Reboot into macOS','menu.description':'Boot once','menu.shutdown':'Shutdown'}
 
@@ -81,3 +81,16 @@ class MenuTests(unittest.TestCase):
         install_menu(self.root,STRINGS)
         sync_strings(self.root,{**STRINGS,'menu.label':'Translated'})
         self.assertIn('// Keep this note',self.menu.read_text())
+
+    def test_comment_only_and_blank_menus_accept_new_rows(self):
+        for raw in ['','  \n','// notes\n','  // notes without newline']:
+            with self.subTest(raw=raw):
+                changed=patch_rows(raw,{'system.reboot-macos':{'label':'macOS'}})
+                self.assertEqual(parse_menu(changed)['system.reboot-macos']['label'],'macOS')
+    def test_comments_after_last_value_survive_addition_and_replacement(self):
+        raw='{\n "personal.notes":{"label":"Notes"}\n // keep this comment\n}\n'
+        for changes in [{'system.reboot-macos':{'label':'macOS'}},{'personal.notes':{'label':'Changed'}}]:
+            with self.subTest(changes=changes):
+                changed=patch_rows(raw,changes)
+                self.assertIn('// keep this comment',changed)
+                for key,value in changes.items():self.assertEqual(parse_menu(changed)[key],value)

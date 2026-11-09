@@ -168,6 +168,8 @@ def remove_menu(root):
 # accepts trailing commas, which also makes last-row deletion non-destructive.
 def patch_rows(text, changes):
     text = text or '{}\n'
+    if not re.sub(r'^\s*//[^\n]*(\n|$)', '', text, flags=re.M).strip():
+        text = text.rstrip() + '\n{}\n'
     def skip(pos):
         while pos < len(text):
             if text[pos].isspace(): pos += 1
@@ -176,38 +178,39 @@ def patch_rows(text, changes):
             else:break
         return pos
     def value_end(pos):
-        stack=[];quoted=False;escape=False
+        stack=[];quoted=False;escape=False;last=pos
         while pos<len(text):
             ch=text[pos]
             if quoted:
                 if escape:escape=False
                 elif ch=='\\':escape=True
                 elif ch=='"':quoted=False
+                last=pos+1
             elif ch=='"':quoted=True
             elif text.startswith('//',pos):
                 end=text.find('\n',pos);pos=len(text) if end<0 else end
                 continue
             elif ch in '[{':stack.append(ch)
             elif ch in ']}':
-                if not stack:return pos
+                if not stack:return pos,last
                 stack.pop()
-            elif ch==',' and not stack:return pos
+            elif ch==',' and not stack:return pos,last
+            if not ch.isspace(): last=pos+1
             pos+=1
         raise ValueError('Incomplete JSONC value')
     def properties(start):
         pos=skip(start)
-        if text[pos]!='{':raise ValueError('Expected a menu object')
+        if pos>=len(text) or text[pos]!='{':raise ValueError('Expected a menu object')
         pos+=1;result=[]
         while True:
             pos=skip(pos)
+            if pos>=len(text):raise ValueError('Incomplete menu object')
             if text[pos]=='}':return result,pos
             key_start=pos
             key,size=json.JSONDecoder().raw_decode(text[pos:])
             pos=skip(pos+size)
-            if not isinstance(key,str) or text[pos]!=':':raise ValueError('Invalid menu property')
-            val_start=skip(pos+1);end=value_end(val_start)
-            val_end=end
-            while val_end>val_start and text[val_end-1].isspace():val_end-=1
+            if not isinstance(key,str) or pos>=len(text) or text[pos]!=':':raise ValueError('Invalid menu property')
+            val_start=skip(pos+1);end,val_end=value_end(val_start)
             comma=end if text[end]==',' else None
             result.append((key,key_start,val_start,val_end,comma))
             pos=end+1 if comma is not None else end
