@@ -297,8 +297,8 @@ class TransactionTests(unittest.TestCase):
 
     def test_cleanup_disables_its_boot_link_without_stopping_itself(self):
         f=self.fixture;f.install()
-        wants=f.units/'multi-user.target.wants';wants.mkdir()
-        link=wants/(lifecycle.UNIT+'.service');link.symlink_to(f.units/(lifecycle.UNIT+'.service'))
+        wants=f.units/'multi-user.target.wants'
+        link=wants/(lifecycle.UNIT+'.service');self.assertTrue(link.exists())
         lifecycle.remove_for_account('user',str(f.config))
         self.assertFalse(link.is_symlink())
         self.assertIn(('/usr/bin/systemctl','disable',lifecycle.UNIT+'.service'),f.calls)
@@ -316,3 +316,20 @@ class TransactionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'cleanup completed'):f.install()
         self.assertFalse(f.lib.exists());self.assertFalse(f.record.exists())
         self.assertFalse(f.rule.exists());self.assertEqual(f.menu.read_bytes(),f.initial_menu)
+
+    def test_upgrade_rollback_preserves_an_enabled_boot_check(self):
+        f=self.fixture;f.install()
+        link=f.units/'multi-user.target.wants'/(lifecycle.UNIT+'.service')
+        self.assertTrue(link.exists());before=f.files();f.fail_menu='install'
+        with self.assertRaises(OSError):f.install()
+        self.assertTrue(link.exists());self.assertEqual(f.files(),before)
+        self.assertFalse(f.transaction.exists())
+
+    def test_dangling_boot_link_cannot_wedge_upgrade_recovery(self):
+        f=self.fixture;f.seed_old_install()
+        service=f.units/(lifecycle.UNIT+'.service');service.unlink()
+        wants=f.units/'multi-user.target.wants';wants.mkdir()
+        link=wants/service.name;link.symlink_to(service)
+        f.fail_menu='install'
+        with self.assertRaises(OSError):f.install()
+        self.assertFalse(f.transaction.exists());self.assertFalse(link.is_symlink())

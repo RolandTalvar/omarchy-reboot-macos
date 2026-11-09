@@ -43,7 +43,7 @@ class InstallationFixture:
             LEGACY=self.legacy, BLESS=self.bless))
         self.stack.enter_context(patch.object(lifecycle.pwd,'getpwnam',return_value=SimpleNamespace(pw_uid=1000)))
         self.stack.enter_context(patch.object(lifecycle,'run',side_effect=self.run))
-        self.stack.enter_context(patch.object(lifecycle,'watcher_state',side_effect=lambda:{'enabled':self.enabled,'active':self.active}))
+        self.stack.enter_context(patch.object(lifecycle,'watcher_state',side_effect=lambda:{'enabled':self.enabled,'active':self.active,'boot_enabled':(self.units/'multi-user.target.wants'/(lifecycle.UNIT+'.service')).exists()}))
         self.stack.enter_context(patch.object(lifecycle,'user_menu',side_effect=self.user_menu))
     @property
     def enabled(self):
@@ -55,12 +55,21 @@ class InstallationFixture:
     def run(self,*args,**kwargs):
         self.calls.append(args)
         if args[0] == '/usr/bin/systemctl':
-            if args[1] == 'disable': self.enabled = self.active = False
-            elif args[1] == 'enable':
-                self.enabled = True
-                if '--now' in args:self.active=True
-            elif args[1] == 'start':self.active=True
-            elif args[1] == 'stop':self.active=False
+            if args[-1] == lifecycle.UNIT+'.service' and args[1] in ['enable','disable']:
+                link=self.units/'multi-user.target.wants'/(lifecycle.UNIT+'.service')
+                if args[1]=='enable':
+                    if not (self.units/(lifecycle.UNIT+'.service')).exists():
+                        raise subprocess.CalledProcessError(1,args)
+                    link.parent.mkdir(exist_ok=True)
+                    if not link.is_symlink():link.symlink_to(self.units/(lifecycle.UNIT+'.service'))
+                else:link.unlink(missing_ok=True)
+            elif args[-1] == lifecycle.UNIT+'.path':
+                if args[1] == 'disable': self.enabled = self.active = False
+                elif args[1] == 'enable':
+                    self.enabled = True
+                    if '--now' in args:self.active=True
+                elif args[1] == 'start':self.active=True
+                elif args[1] == 'stop':self.active=False
         if self.fail_command and self.fail_command(args):
             self.fail_command = None
             raise subprocess.CalledProcessError(1,args)
