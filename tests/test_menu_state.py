@@ -108,3 +108,13 @@ class MenuTests(unittest.TestCase):
                 self.assertEqual(json.loads(upstream)['system.shutdown-last']['action'],command)
                 remove_menu(self.root)
                 self.assertEqual(self.menu.read_text(),original)
+
+    def test_stock_shutdown_edits_survive_without_the_hidden_condition(self):
+        for field,value in [('action','custom-shutdown'),('label','My power label'),('when','custom-condition')]:
+            with self.subTest(field=field):
+                self.write({});install_menu(self.root,STRINGS)
+                data=read_menu(self.menu);data['system.shutdown'][field]=value;self.write(data)
+                remove_menu(self.root)
+                result=read_menu(self.menu)
+                self.assertEqual(result['system.shutdown'],{field:value})
+                self.assertNotIn('system.shutdown-last',result)

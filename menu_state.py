@@ -191,15 +191,14 @@ def remove_menu(root):
                 if previous is None: rows.pop(key,None)
                 else: rows[key] = previous
             elif isinstance(current,dict):
-                if previous is None:
-                    # Our relocated row can be removed if its command is still
-                    # ours; preserve a replacement action the user supplied.
-                    if current.get('action') == applied.get('action'): rows.pop(key,None)
+                if previous is None and applied.get('action') is not None and current.get('action') == applied['action']:
+                    rows.pop(key,None)  # Our newly introduced command, not a user replacement.
                 else:
                     for field,value in applied.items():
                         if current.get(field) == value:
-                            if field in previous: current[field] = previous[field]
+                            if previous is not None and field in previous: current[field] = previous[field]
                             else: current.pop(field,None)
+                    if not current: rows.pop(key,None)
         atomic_write(menu,patch_rows(menu.read_text(),{key:rows.get(key) for key in KEYS}))
         state_path.unlink()
         return True
