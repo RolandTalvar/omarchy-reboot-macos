@@ -55,3 +55,14 @@ class MenuTransactionTests(unittest.TestCase):
         menu_install.install(self.root)
         self.assertIn('system.reboot-macos',menu_state.read_menu(self.f.menu))
         menu_install.commit(self.root)
+
+    def test_interrupted_stale_state_reconcile_restores_both_sides(self):
+        menu_install.install(self.root);menu_install.commit(self.root)
+        rows=menu_state.read_menu(self.f.menu);rows.pop('system.reboot-macos')
+        self.f.menu.write_text(json.dumps(rows))
+        before=menu_install.capture(self.root)
+        menu_install.begin(self.root)
+        menu_state.install_menu(self.root,{'menu.label':'Reboot into macOS','menu.description':'Once','menu.shutdown':'Shutdown'})
+        # Simulate termination before the applied snapshot can be persisted.
+        menu_install.rollback(self.root)
+        self.assertEqual(menu_install.capture(self.root),before)

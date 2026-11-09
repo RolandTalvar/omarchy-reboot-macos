@@ -55,7 +55,7 @@ def undo(before, applied, current):
 def infer_applied(root,before):
     expected=dict(before)
     state=root/FILES[1]
-    if before[FILES[1]] is None and state.exists():
+    if state.exists() and capture(root)[FILES[1]] != before[FILES[1]]:
         data=json.loads(state.read_text())
         if 'last_text' not in data: raise ValueError('Cannot infer an interrupted menu write safely.')
         expected[FILES[0]]={'data':base64.b64encode(data['last_text'].encode()).decode(),
