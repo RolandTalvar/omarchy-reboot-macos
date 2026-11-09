@@ -230,3 +230,32 @@ class TransactionTests(unittest.TestCase):
         lifecycle.shutil.rmtree(f.plugin);real()
         self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
         self.assertFalse(f.enabled or f.active);self.assertFalse(f.transaction.exists())
+
+    def test_interrupted_file_restore_keeps_live_record_and_code_intact(self):
+        f=self.fixture;f.seed_old_install()
+        lifecycle.directory(f.transaction,0o711)
+        entries=lifecycle.snapshot_artifacts()
+        (f.lib/'lifecycle.py').write_text('# current cleanup entry point\n')
+        before=f.record.read_bytes();copy=lifecycle.shutil.copy2
+        def interrupt(source,target,*args,**kwargs):
+            if Path(source)==f.transaction/'backup/3':
+                Path(target).write_text('');raise SystemExit('Power loss during copy')
+            return copy(source,target,*args,**kwargs)
+        with patch.object(lifecycle.shutil,'copy2',side_effect=interrupt):
+            with self.assertRaises(SystemExit):lifecycle.restore_artifacts(entries)
+        self.assertEqual(f.record.read_bytes(),before)
+        # The old snapshot intentionally lacks lifecycle.py; removal of extras
+        # follows successful replacement of every saved module.
+        lifecycle.restore_artifacts(entries)
+        self.assertEqual(f.record.read_bytes(),before)
+
+    def test_cleanup_recovers_an_empty_record_using_the_journal(self):
+        f=self.fixture;f.seed_old_install();real=lifecycle.recover_installation
+        f.fail_menu='install'
+        with patch.object(lifecycle,'recover_installation',side_effect=[None,SystemExit('Power loss')]):
+            with self.assertRaises(SystemExit):f.install()
+        f.record.write_text('')
+        import shutil
+        shutil.rmtree(f.plugin)
+        lifecycle.dispatch(['check'])
+        self.assertFalse(f.rule.exists());self.assertFalse(f.record.exists())

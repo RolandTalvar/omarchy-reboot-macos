@@ -174,17 +174,45 @@ def restore_artifacts(entries):
                 raise RecoveryError('A transaction backup is missing or incomplete; installed files were left untouched.')
     for index, entry in enumerate(entries):
         path = Path(entry['path'])
-        if path.is_dir() and not path.is_symlink(): shutil.rmtree(path)
-        else: path.unlink(missing_ok=True)
         if entry['exists']:
-            path.parent.mkdir(parents=True, exist_ok=True)
             saved = TRANSACTION/'backup'/str(index)
-            if entry['directory']: shutil.copytree(saved, path, symlinks=True)
-            else: shutil.copy2(saved, path)
+            restore_path(saved, path)
             os.chmod(path, entry['mode'])
             os.chown(path, entry['uid'], entry['gid'])
             sync_tree(path)
+        elif path.is_dir() and not path.is_symlink(): shutil.rmtree(path)
+        else: path.unlink(missing_ok=True)
         if path.parent.exists(): sync_directory(path.parent)
+
+
+def restore_path(saved, path):
+    # Keep installed entry points available throughout rollback. Each file is
+    # complete and durable before replacing its previous version.
+    if saved.is_dir() and not saved.is_symlink():
+        directory(path, saved.stat().st_mode & 0o7777)
+        for child in saved.iterdir(): restore_path(child, path/child.name)
+        for child in path.iterdir():
+            if not (saved/child.name).exists() and not (saved/child.name).is_symlink():
+                if child.is_dir() and not child.is_symlink(): shutil.rmtree(child)
+                else: child.unlink()
+        shutil.copystat(saved, path)
+        sync_directory(path)
+        sync_directory(path.parent)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix='.'+path.name, dir=path.parent)
+    os.close(fd)
+    temporary = Path(temporary)
+    try:
+        if saved.is_symlink():
+            temporary.unlink()
+            temporary.symlink_to(os.readlink(saved))
+        else:
+            shutil.copy2(saved, temporary)
+            sync_tree(temporary)
+        os.replace(temporary, path)
+        sync_directory(path.parent)
+    finally: temporary.unlink(missing_ok=True)
 
 
 def finish_transaction():
@@ -290,6 +318,7 @@ def stage_installation(account, config, source):
 def install(account, config, source):
     user = pwd.getpwnam(account)
     if user.pw_uid == 0: raise ValueError('Install for a desktop user, not root')
+    recover_installation()
     if RECORD.exists() and json.loads(RECORD.read_text())['account'] != account:
         raise ValueError('This helper is already installed for another user')
     config = Path(config).resolve()
@@ -297,9 +326,6 @@ def install(account, config, source):
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'
     if not (plugin/'manifest.json').is_file(): raise ValueError('Install the Omarchy plugin first')
     if not BLESS.is_file(): raise ValueError('Install asahi-bless first')
-    # Retry an interrupted installation from its durable journal before making
-    # new changes. The journal and staged code are administrator-owned.
-    recover_installation()
     record = {'version':1, 'account':account, 'config':str(config), 'plugin':str(plugin)}
     try:
         stage = stage_installation(account, config, Path(source))
@@ -389,7 +415,7 @@ def cleanup_requested(record):
 
 def dispatch(args):
     if args==['check']:
-        record=json.loads(RECORD.read_text()) if RECORD.exists() else None
+        record=read_record()
         if record and not Path(record['plugin']).exists():
             cleanup_requested(record)
             return
@@ -405,8 +431,17 @@ def dispatch(args):
     else: raise ValueError('Invalid setup operation')
 
 
+def read_record():
+    try: return json.loads(RECORD.read_text()) if RECORD.exists() else None
+    except (ValueError, OSError):
+        # A durable journal remains authoritative after an interrupted older
+        # installer's non-atomic record restore.
+        if TRANSACTION.exists(): return read_journal()['record']
+        raise
+
+
 def remove_for_account(account, config):
-    record=json.loads(RECORD.read_text()) if RECORD.exists() else {'account':account,'config':str(Path(config).resolve())}
+    record=read_record() or {'account':account,'config':str(Path(config).resolve())}
     if record['account']!=account: raise ValueError('Installation belongs to another user')
     cleanup_requested(record)
 
