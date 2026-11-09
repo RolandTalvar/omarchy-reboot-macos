@@ -25,11 +25,32 @@ ENV = {'PATH':'/usr/bin:/bin','LANG':'C','LC_ALL':'C'}
 
 def run(*args, **kwargs): return subprocess.run(list(args),env=ENV,check=True,**kwargs)
 
+class RecoveryError(RuntimeError):
+    pass
+
+
+def sync_directory(path):
+    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try: os.fsync(descriptor)
+    finally: os.close(descriptor)
+
+
+def sync_tree(path):
+    if path.is_symlink(): return
+    if path.is_dir():
+        for child in path.iterdir(): sync_tree(child)
+        sync_directory(path)
+    else:
+        with path.open('rb') as source: os.fsync(source.fileno())
+
+
 def directory(path, mode=0o755, exist_ok=True):
     if not path.parent.exists(): directory(path.parent)
     path.mkdir(mode=mode, exist_ok=exist_ok)
     if path.is_symlink(): raise ValueError('Refusing a symlinked installation directory')
     path.chmod(mode)
+    sync_directory(path)
+    sync_directory(path.parent)
 
 
 def write_root(path,text,mode=0o644):
@@ -37,8 +58,12 @@ def write_root(path,text,mode=0o644):
     fd,temp = tempfile.mkstemp(prefix='.'+path.name,dir=path.parent)
     try:
         os.fchmod(fd,mode)
-        with os.fdopen(fd,'w') as output: output.write(text)
+        with os.fdopen(fd,'w') as output:
+            output.write(text)
+            output.flush()
+            os.fsync(output.fileno())
         os.replace(temp,path)
+        sync_directory(path.parent)
     finally: Path(temp).unlink(missing_ok=True)
 
 def remove(record):
@@ -92,6 +117,8 @@ def snapshot_artifacts():
             if path.is_dir(): shutil.copytree(path, saved, symlinks=True)
             else: shutil.copy2(path, saved)
         entries.append(entry)
+    sync_tree(backup)
+    sync_directory(TRANSACTION)
     return entries
 
 
@@ -115,12 +142,38 @@ def finish_transaction():
     except OSError: pass
 
 
+def write_journal(saved):
+    text = json.dumps(saved)
+    # Both copies are durable before any operation they authorize proceeds.
+    write_root(TRANSACTION/'journal.json', text, 0o600)
+    write_root(TRANSACTION/'journal.mirror.json', text, 0o600)
+
+
+def read_journal():
+    errors = []
+    for name in ['journal.json','journal.mirror.json']:
+        try:
+            saved = json.loads((TRANSACTION/name).read_text())
+            if saved['phase'] not in ['installing','committed']:
+                raise ValueError('Invalid transaction phase')
+            if [entry['path'] for entry in saved['artifacts']] != [str(path) for path in artifacts()]:
+                raise ValueError('Invalid transaction artifact paths')
+            if not isinstance(saved['menu_started'], bool): raise ValueError('Invalid menu phase')
+            if not re.fullmatch(r'[a-z_][a-z0-9_-]*',saved['record']['account']): raise ValueError('Invalid transaction user')
+            return saved
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            errors.append(str(error))
+    raise RecoveryError('Both transaction journals are unreadable. Installed files and backups were left untouched. '
+                        'An administrator must restore a valid journal from backup; see README recovery instructions. '
+                        + '; '.join(errors))
+
+
 def recover_installation():
     journal = TRANSACTION/'journal.json'
-    if not journal.exists():
+    if not journal.exists() and not (TRANSACTION/'journal.mirror.json').exists():
         if TRANSACTION.exists(): finish_transaction()
         return
-    saved = json.loads(journal.read_text())
+    saved = read_journal()
     stage = TRANSACTION/'stage'
     if saved['phase'] == 'committed':
         user_menu(stage, 'commit', saved['record'])
@@ -191,7 +244,7 @@ def install(account, config, source):
         saved = {'phase':'installing', 'record':record,
                  'watcher':watcher_state(), 'artifacts':snapshot_artifacts(),
                  'menu_started':False}
-        write_root(TRANSACTION/'journal.json', json.dumps(saved), 0o600)
+        write_journal(saved)
         if (UNITS/(UNIT+'.path')).exists():
             run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
         trusted_modules = ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
@@ -215,7 +268,7 @@ def install(account, config, source):
         if LEGACY.exists() and LEGACY.read_text().strip() == f'{account} ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot macOS Sequoia --yes':
             LEGACY.unlink()
         saved['menu_started'] = True
-        write_root(TRANSACTION/'journal.json', json.dumps(saved), 0o600)
+        write_journal(saved)
         user_menu(stage, 'install', record)
         run('/usr/bin/visudo', '-c')
         run('/usr/bin/systemctl', 'daemon-reload')
@@ -225,7 +278,7 @@ def install(account, config, source):
         # Both sides are now installed. Persist the commit decision before
         # deleting snapshots so an interrupted cleanup never rolls back half.
         saved['phase'] = 'committed'
-        write_root(TRANSACTION/'journal.json', json.dumps(saved), 0o600)
+        write_journal(saved)
     except BaseException:
         recover_installation()
         raise

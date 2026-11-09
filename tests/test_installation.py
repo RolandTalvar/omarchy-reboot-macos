@@ -98,3 +98,33 @@ class TransactionTests(unittest.TestCase):
                     self.assertEqual(f.helper.stat().st_mode & 0o777,0o755)
                     self.assertEqual(f.rule.stat().st_mode & 0o777,0o440)
                 finally:os.umask(old);f.close()
+
+    def test_root_writes_sync_file_before_rename_and_directory_after(self):
+        f=self.fixture;events=[];real_replace=os.replace
+        def sync(fd):
+            import stat
+            events.append('directory' if stat.S_ISDIR(os.fstat(fd).st_mode) else 'file')
+        def replace(*args):events.append('rename');return real_replace(*args)
+        with patch.object(os,'fsync',side_effect=sync),patch.object(os,'replace',side_effect=replace):
+            lifecycle.write_root(f.root/'probe','data')
+        self.assertEqual(events,['file','rename','directory'])
+    def test_damaged_primary_journal_recovers_from_durable_mirror(self):
+        f=self.fixture;f.seed_old_install();before=f.files();real=lifecycle.recover_installation;calls=0
+        f.fail_menu='install'
+        def interrupt():
+            nonlocal calls
+            calls+=1
+            if calls==2:raise OSError('Simulated interruption')
+            return real()
+        with patch.object(lifecycle,'recover_installation',side_effect=interrupt):
+            with self.assertRaises(OSError):f.install()
+        (f.transaction/'journal.json').write_text('')
+        real()
+        self.assertEqual(f.files(),before);self.assert_clean_rollback()
+    def test_two_damaged_journals_fail_without_deleting_installed_files(self):
+        f=self.fixture;f.seed_old_install();before=f.files()
+        f.transaction.mkdir(parents=True)
+        for name in ['journal.json','journal.mirror.json']:(f.transaction/name).write_text('')
+        with self.assertRaisesRegex(lifecycle.RecoveryError,'left untouched'):
+            lifecycle.recover_installation()
+        self.assertEqual(f.files(),before)

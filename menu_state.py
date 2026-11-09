@@ -24,8 +24,14 @@ def atomic_write(path, text):
     fd, temporary = tempfile.mkstemp(prefix='.' + path.name + '.', dir=path.parent)
     try:
         if path.exists(): os.fchmod(fd, path.stat().st_mode & 0o777)
-        with os.fdopen(fd, 'w') as output: output.write(text)
+        with os.fdopen(fd, 'w') as output:
+            output.write(text)
+            output.flush()
+            os.fsync(output.fileno())
         os.replace(temporary, path)
+        descriptor = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try: os.fsync(descriptor)
+        finally: os.close(descriptor)
     finally:
         Path(temporary).unlink(missing_ok=True)
 

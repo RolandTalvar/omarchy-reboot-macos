@@ -38,6 +38,10 @@ python3 ~/.config/omarchy/plugins/rolandtlvr.reboot-macos/setup.py install
 
 Updating the checkout changes the UI files, but never replaces the administrator-owned helper automatically. Rerun setup to apply privileged updates. Setup preserves the original removal backup and your menu customizations, replaces the trusted helper snapshot, and removes obsolete modules. A failed upgrade restores the previous files, permissions, menu, and watcher state; retrying does not overwrite the original removal backup.
 
+### Interrupted setup recovery
+
+Files, backup trees, and journal renames are synchronized before protected changes proceed. Setup keeps a primary journal and a mirror in `/var/lib/omarchy-reboot-macos/install-transaction`. A valid mirror recovers a damaged primary automatically. If both journals are damaged, setup stops without deleting installed files or backups. Preserve that entire directory and have an administrator inspect it and restore a valid journal from a trusted backup before retrying setup; do not delete backups or invent a replacement journal. This is deliberate refusal to guess at an unknown state.
+
 ## Languages
 
 The menu entry, description, confirmation, Yes/No buttons, volume picker, and user-facing failure message follow **Setup > Language**. Catalogs cover all 50 current Omarchy languages. The menu updates live without a shell restart; new terminal actions read the current selection. Missing translations fall back to the base language, then English. Disk names are never translated. The native dialog mirrors right-to-left layouts, wraps text, isolates mixed-direction volume names, and treats window data as plain text. Technical diagnostics and administrator setup output remain in English.
