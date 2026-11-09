@@ -345,23 +345,25 @@ def install(account, config, source):
             if entry.name not in trusted_modules:
                 if entry.is_dir() and not entry.is_symlink(): shutil.rmtree(entry)
                 else: entry.unlink()
-        write_root(HELPER, (stage/'boot_helper.py').read_text(), 0o755)
-        write_root(RULE, (stage/'sudoers').read_text(), 0o440)
         write_root(RECORD, json.dumps(record)+'\n')
         for suffix in ['path','service']:
             name = UNIT+'.'+suffix
             write_root(UNITS/name, (stage/name).read_text())
+        run('/usr/bin/systemctl', 'daemon-reload')
+        if not (plugin/'manifest.json').is_file():
+            raise ValueError('Plugin was removed during installation')
+        # First installations need a persistent removal watcher before any
+        # passwordless access is granted, including across a power loss.
+        run('/usr/bin/systemctl', 'enable', '--now', UNIT+'.path')
+        if not (plugin/'manifest.json').is_file():
+            raise ValueError('Plugin was removed while enabling its watcher')
+        write_root(HELPER, (stage/'boot_helper.py').read_text(), 0o755)
+        write_root(RULE, (stage/'sudoers').read_text(), 0o440)
         retire_legacy_rule(account)
         saved['menu_started'] = True
         write_journal(saved)
         user_menu(stage, 'install', record)
         run('/usr/bin/visudo', '-c')
-        run('/usr/bin/systemctl', 'daemon-reload')
-        if not (plugin/'manifest.json').is_file():
-            raise ValueError('Plugin was removed during installation')
-        run('/usr/bin/systemctl', 'enable', '--now', UNIT+'.path')
-        if not (plugin/'manifest.json').is_file():
-            raise ValueError('Plugin was removed while enabling its watcher')
         # Both sides are now installed. Persist the commit decision before
         # deleting snapshots so an interrupted cleanup never rolls back half.
         saved['phase'] = 'committed'

@@ -259,3 +259,12 @@ class TransactionTests(unittest.TestCase):
         shutil.rmtree(f.plugin)
         lifecycle.dispatch(['check'])
         self.assertFalse(f.rule.exists());self.assertFalse(f.record.exists())
+
+    def test_first_install_activates_watcher_before_granting_access(self):
+        f=self.fixture;write=lifecycle.write_root
+        def checked(path,*args,**kwargs):
+            if path in [f.helper,f.rule]:
+                self.assertTrue(f.enabled);self.assertTrue(f.active)
+                self.assertTrue(f.record.exists())
+            return write(path,*args,**kwargs)
+        with patch.object(lifecycle,'write_root',side_effect=checked):f.install()
