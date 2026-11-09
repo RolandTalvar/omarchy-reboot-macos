@@ -102,7 +102,9 @@ def remove(record):
     stop_watcher()
     for suffix in ['path','service']: unlink_synced(UNITS/(UNIT+'.'+suffix))
     run('/usr/bin/systemctl','daemon-reload')
-    if LIB.exists(): shutil.rmtree(LIB)
+    if LIB.exists():
+        shutil.rmtree(LIB)
+        sync_directory(LIB.parent)
     # Keep the record until every other component is gone, so a fresh copy of
     # the installer can resume even if the installed cleanup code was removed.
     unlink_synced(RECORD)
@@ -182,6 +184,8 @@ def restore_artifacts(entries):
             else: shutil.copy2(saved, path)
             os.chmod(path, entry['mode'])
             os.chown(path, entry['uid'], entry['gid'])
+            sync_tree(path)
+        if path.parent.exists(): sync_directory(path.parent)
 
 
 def finish_transaction():

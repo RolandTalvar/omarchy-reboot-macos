@@ -180,3 +180,13 @@ class TransactionTests(unittest.TestCase):
         self.assertFalse(f.helper.exists());self.assertFalse(f.rule.exists())
         self.assertFalse(f.record.exists());self.assertFalse(f.enabled or f.active)
         self.assert_clean_rollback()
+
+    def test_restored_artifacts_are_synced_before_journals_are_retired(self):
+        f=self.fixture;f.seed_old_install();f.fail_menu='install';events=[]
+        real_sync=lifecycle.sync_tree;real_finish=lifecycle.finish_transaction
+        def sync(path):events.append(('sync',path));return real_sync(path)
+        def finish():events.append(('finish',None));return real_finish()
+        with patch.object(lifecycle,'sync_tree',side_effect=sync),patch.object(lifecycle,'finish_transaction',side_effect=finish):
+            with self.assertRaises(OSError):f.install()
+        end=events.index(('finish',None))
+        self.assertIn(('sync',f.lib),events[:end]);self.assertIn(('sync',f.helper),events[:end])
