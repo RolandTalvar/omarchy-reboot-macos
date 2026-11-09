@@ -128,3 +128,11 @@ class MenuTests(unittest.TestCase):
                     remove_menu(self.root);result=read_menu(self.menu)
                     self.assertEqual(result['system.shutdown'][field],value)
                     self.assertNotIn('system.shutdown-last',result)
+
+    def test_setup_reconciles_stale_state_without_overwriting_original_backup(self):
+        original={'system.shutdown':{'action':'my-shutdown'}}
+        self.write(original);install_menu(self.root,STRINGS)
+        data=read_menu(self.menu);data.pop('system.reboot-macos');self.write(data)
+        install_menu(self.root,STRINGS)
+        self.assertIn('system.reboot-macos',read_menu(self.menu))
+        remove_menu(self.root);self.assertEqual(read_menu(self.menu),original)

@@ -76,6 +76,14 @@ def atomic_write(path, text):
     finally:
         Path(temporary).unlink(missing_ok=True)
 
+def unlink_synced(path):
+    if path.exists() or path.is_symlink():
+        path.unlink()
+        descriptor=os.open(path.parent,os.O_RDONLY | os.O_DIRECTORY)
+        try: os.fsync(descriptor)
+        finally: os.close(descriptor)
+
+
 def write_json(path, data): atomic_write(path, json.dumps(data, indent=2, ensure_ascii=False) + '\n')
 
 _held_locks = threading.local()
@@ -102,8 +110,11 @@ def install_menu(root, strings, stock_shutdown=None):
         data = read_menu(menu)
         rows = items(data)
         if state_path.exists():
-            # Idempotent setup: never replace the original backup with our rows.
-            return
+            if KEYS[0] in rows:
+                return  # Never overwrite a live integration or manual replacement.
+            # A stale ownership file must not make explicit setup a no-op.
+            remove_menu(root)
+            data=read_menu(menu);rows=items(data)
         original = menu.read_text() if menu.exists() else ''
         before = {key: deepcopy(rows.get(key)) for key in KEYS}
         legacy = root / 'reboot-macos-menu-backup.json'
@@ -132,7 +143,7 @@ def install_menu(root, strings, stock_shutdown=None):
         state['last_text'] = text
         write_json(state_path,state)
         atomic_write(menu,text)
-        legacy.unlink(missing_ok=True)
+        unlink_synced(legacy)
 
 def sync_strings(root, strings):
     menu, state_path = paths(root)
@@ -166,7 +177,7 @@ def remove_menu(root):
         if not state_path.exists(): return False
         state = json.loads(state_path.read_text())
         if not menu.exists():
-            state_path.unlink()
+            unlink_synced(state_path)
             return True
         data = read_menu(menu)
         rows = items(data)
@@ -182,8 +193,8 @@ def remove_menu(root):
                 else: remrows[key] = previous
             if remaining == expected:
                 if state['original_existed']: atomic_write(menu,state['original_text'])
-                else: menu.unlink(missing_ok=True)
-                state_path.unlink()
+                else: unlink_synced(menu)
+                unlink_synced(state_path)
                 return True
         moved=rows.get(KEYS[2])
         installed_move=state['applied'][KEYS[2]]
@@ -213,7 +224,7 @@ def remove_menu(root):
                             else: current.pop(field,None)
                     if not current: rows.pop(key,None)
         atomic_write(menu,patch_rows(menu.read_text(),{key:rows.get(key) for key in KEYS}))
-        state_path.unlink()
+        unlink_synced(state_path)
         return True
 
 # Surgical edits preserve unrelated JSONC comments and formatting. Omarchy
