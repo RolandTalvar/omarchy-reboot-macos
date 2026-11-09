@@ -348,4 +348,4 @@ class TransactionTests(unittest.TestCase):
         f=self.fixture;f.install()
         service=(f.units/(lifecycle.UNIT+'.service')).read_text()
         import json
-        self.assertIn('RequiresMountsFor='+json.dumps(str(f.config)),service)
+        self.assertIn('RequiresMountsFor='+json.dumps(str(f.plugin)),service)

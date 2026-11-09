@@ -337,7 +337,7 @@ def stage_installation(account, config, source):
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'
     watch = str(plugin.parent).replace('%','%%')
     write_root(stage/(UNIT+'.path'), f'[Unit]\nDescription=Watch for removal of the macOS reboot plugin\n\n[Path]\nPathChanged={watch}\nUnit={UNIT}.service\n\n[Install]\nWantedBy=multi-user.target\n')
-    mount = json.dumps(str(config).replace('%','%%'),ensure_ascii=False)
+    mount = json.dumps(str(plugin).replace('%','%%'),ensure_ascii=False)
     write_root(stage/(UNIT+'.service'), f'[Unit]\nDescription=Clean up removed macOS reboot plugin\nRequiresMountsFor={mount}\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nRestart=on-failure\nRestartSec=15s\nExecStartPre=/usr/bin/sleep 2\nExecStart=/usr/bin/python3 -I {LIB}/lifecycle.py check\n\n[Install]\nWantedBy=multi-user.target\n')
     run('/usr/bin/systemd-analyze', 'verify', str(stage/(UNIT+'.path')),
         str(stage/(UNIT+'.service')))
