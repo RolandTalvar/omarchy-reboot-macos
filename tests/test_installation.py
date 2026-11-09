@@ -287,3 +287,19 @@ class TransactionTests(unittest.TestCase):
             if path==f.rule:self.assertIn(wants,synced)
             return write(path,*args,**kwargs)
         with patch.object(lifecycle,'sync_directory',side_effect=record),patch.object(lifecycle,'write_root',side_effect=checked):f.install()
+
+    def test_cleanup_is_enabled_at_boot_without_starting_under_setup_lock(self):
+        f=self.fixture;f.install()
+        service=(f.units/(lifecycle.UNIT+'.service')).read_text()
+        self.assertIn('[Install]\nWantedBy=multi-user.target',service)
+        self.assertIn(('/usr/bin/systemctl','enable',lifecycle.UNIT+'.service'),f.calls)
+        self.assertNotIn(('/usr/bin/systemctl','enable','--now',lifecycle.UNIT+'.service'),f.calls)
+
+    def test_cleanup_disables_its_boot_link_without_stopping_itself(self):
+        f=self.fixture;f.install()
+        wants=f.units/'multi-user.target.wants';wants.mkdir()
+        link=wants/(lifecycle.UNIT+'.service');link.symlink_to(f.units/(lifecycle.UNIT+'.service'))
+        lifecycle.remove_for_account('user',str(f.config))
+        self.assertFalse(link.is_symlink())
+        self.assertIn(('/usr/bin/systemctl','disable',lifecycle.UNIT+'.service'),f.calls)
+        self.assertNotIn(('/usr/bin/systemctl','stop',lifecycle.UNIT+'.service'),f.calls)

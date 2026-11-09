@@ -79,7 +79,17 @@ def sync_enablement():
     sync_directory(UNITS)
 
 
+def disable_boot_check():
+    boot_link = UNITS/'multi-user.target.wants'/(UNIT+'.service')
+    if boot_link.exists() or boot_link.is_symlink():
+        if (UNITS/(UNIT+'.service')).exists():
+            # Never stop this service from inside its own cleanup process.
+            run('/usr/bin/systemctl','disable',UNIT+'.service')
+        unlink_synced(boot_link)
+
+
 def stop_watcher():
+    disable_boot_check()
     if (UNITS/(UNIT+'.path')).exists():
         run('/usr/bin/systemctl','disable','--now',UNIT+'.path')
     else:
@@ -121,6 +131,9 @@ def watcher_state():
         result = subprocess.run(['/usr/bin/systemctl', command, UNIT+'.path'],
                                 env=ENV, text=True, capture_output=True, check=False)
         state[key] = result.returncode == 0
+    result = subprocess.run(['/usr/bin/systemctl', 'is-enabled', UNIT+'.service'],
+                            env=ENV, text=True, capture_output=True, check=False)
+    state['boot_enabled'] = result.returncode == 0
     return state
 
 
@@ -288,6 +301,10 @@ def recover_installation():
             run('/usr/bin/systemctl', 'enable', UNIT+'.path')
         if saved['watcher']['active']:
             run('/usr/bin/systemctl', 'start', UNIT+'.path')
+        if saved['watcher'].get('boot_enabled',False):
+            run('/usr/bin/systemctl', 'enable', UNIT+'.service')
+        else: disable_boot_check()
+        sync_enablement()
     if RULE.exists(): run('/usr/bin/visudo', '-cf', str(RULE))
     finish_transaction()
 
@@ -316,7 +333,7 @@ def stage_installation(account, config, source):
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'
     watch = str(plugin.parent).replace('%','%%')
     write_root(stage/(UNIT+'.path'), f'[Unit]\nDescription=Watch for removal of the macOS reboot plugin\n\n[Path]\nPathChanged={watch}\nUnit={UNIT}.service\n\n[Install]\nWantedBy=multi-user.target\n')
-    write_root(stage/(UNIT+'.service'), f'[Unit]\nDescription=Clean up removed macOS reboot plugin\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nRestart=on-failure\nRestartSec=15s\nExecStartPre=/usr/bin/sleep 2\nExecStart=/usr/bin/python3 -I {LIB}/lifecycle.py check\n')
+    write_root(stage/(UNIT+'.service'), f'[Unit]\nDescription=Clean up removed macOS reboot plugin\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nRestart=on-failure\nRestartSec=15s\nExecStartPre=/usr/bin/sleep 2\nExecStart=/usr/bin/python3 -I {LIB}/lifecycle.py check\n\n[Install]\nWantedBy=multi-user.target\n')
     run('/usr/bin/systemd-analyze', 'verify', str(stage/(UNIT+'.path')),
         str(stage/(UNIT+'.service')))
     return stage
@@ -361,6 +378,8 @@ def install(account, config, source):
             raise ValueError('Plugin was removed during installation')
         # First installations need a persistent removal watcher before any
         # passwordless access is granted, including across a power loss.
+        # Enable the boot check without starting it while we hold its lock.
+        run('/usr/bin/systemctl', 'enable', UNIT+'.service')
         run('/usr/bin/systemctl', 'enable', '--now', UNIT+'.path')
         sync_enablement()
         if not (plugin/'manifest.json').is_file():
