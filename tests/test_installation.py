@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess
+import os
 import unittest
 from unittest.mock import patch
 import lifecycle
@@ -78,3 +79,22 @@ class TransactionTests(unittest.TestCase):
         before=f.files();lifecycle.recover_installation()
         self.assertEqual(f.files(),before)
         self.assertFalse(f.transaction.exists())
+
+    def test_privileged_modes_ignore_permissive_and_restrictive_umasks(self):
+        for mask in [0o000,0o027,0o077]:
+            with self.subTest(umask=oct(mask)):
+                f=InstallationFixture()
+                old=os.umask(mask)
+                delegate=f.user_menu
+                def verify_stage(stage,operation,record):
+                    self.assertEqual(f.transaction.stat().st_mode & 0o777,0o711)
+                    self.assertEqual(stage.stat().st_mode & 0o777,0o755)
+                    self.assertEqual((stage/'i18n').stat().st_mode & 0o777,0o755)
+                    self.assertEqual((f.transaction/'backup').stat().st_mode & 0o777,0o700)
+                    return delegate(stage,operation,record)
+                try:
+                    with patch.object(lifecycle,'user_menu',side_effect=verify_stage):f.install()
+                    self.assertEqual(f.lib.stat().st_mode & 0o777,0o755)
+                    self.assertEqual(f.helper.stat().st_mode & 0o777,0o755)
+                    self.assertEqual(f.rule.stat().st_mode & 0o777,0o440)
+                finally:os.umask(old);f.close()

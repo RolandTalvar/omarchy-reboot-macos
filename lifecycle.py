@@ -25,8 +25,15 @@ ENV = {'PATH':'/usr/bin:/bin','LANG':'C','LC_ALL':'C'}
 
 def run(*args, **kwargs): return subprocess.run(list(args),env=ENV,check=True,**kwargs)
 
+def directory(path, mode=0o755, exist_ok=True):
+    if not path.parent.exists(): directory(path.parent)
+    path.mkdir(mode=mode, exist_ok=exist_ok)
+    if path.is_symlink(): raise ValueError('Refusing a symlinked installation directory')
+    path.chmod(mode)
+
+
 def write_root(path,text,mode=0o644):
-    path.parent.mkdir(parents=True,exist_ok=True)
+    if not path.parent.exists(): directory(path.parent)
     fd,temp = tempfile.mkstemp(prefix='.'+path.name,dir=path.parent)
     try:
         os.fchmod(fd,mode)
@@ -71,7 +78,7 @@ def artifacts():
 
 def snapshot_artifacts():
     backup = TRANSACTION/'backup'
-    backup.mkdir(mode=0o700)
+    directory(backup, 0o700, exist_ok=False)
     entries = []
     for index, path in enumerate(artifacts()):
         entry = {'path': str(path), 'exists': path.exists() or path.is_symlink()}
@@ -136,16 +143,16 @@ def recover_installation():
 
 
 def stage_installation(account, config, source):
-    TRANSACTION.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-    TRANSACTION.mkdir(mode=0o711)
+    directory(TRANSACTION.parent, 0o755)
+    directory(TRANSACTION, 0o711, exist_ok=False)
     stage = TRANSACTION/'stage'
-    stage.mkdir(mode=0o755)
+    directory(stage, 0o755, exist_ok=False)
     for name in ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
                  'menu_install.py', 'translations.py', 'boot_helper.py']:
         text = (source/name).read_text()
         compile(text, name, 'exec')
         write_root(stage/name, text)
-    (stage/'i18n').mkdir(mode=0o755)
+    directory(stage/'i18n', 0o755, exist_ok=False)
     for catalog in (source/'i18n').glob('*.json'):
         if catalog.is_symlink(): raise ValueError('Symlinked translation catalog')
         text = catalog.read_text()
@@ -189,6 +196,7 @@ def install(account, config, source):
             run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
         trusted_modules = ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
                            'menu_install.py', 'translations.py']
+        directory(LIB, 0o755)
         for name in trusted_modules:
             write_root(LIB/name, (stage/name).read_text())
         # This directory is an installed snapshot, not an overlay. Obsolete
@@ -226,6 +234,7 @@ def install(account, config, source):
 
 def main(args):
     if os.geteuid()!=0: raise ValueError('Administrator authentication required')
+    os.umask(0o022)
     descriptor = os.open(LOCK, os.O_CREAT | os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, 'a') as lock:
         if os.fstat(lock.fileno()).st_uid != os.getuid():
