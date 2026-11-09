@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Explicit one-time setup; plugin loading never mutates menu files."""
+"""Explicit setup for menu ownership and privileged helper installation."""
 import datetime
 import json
 import os
@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+from translations import translate as t
 
 ID = 'rolandtlvr.reboot-macos'
 KEYS = ['system.reboot-macos', 'system.shutdown', 'system.shutdown-last']
@@ -24,7 +25,7 @@ def main():
         raise SystemExit('Usage: python3 setup.py install|remove')
     mode = sys.argv[1]
     source = Path(__file__).resolve().parent
-    root = Path.home() / '.config/omarchy'
+    root = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'omarchy'
     menu = root / 'extensions/omarchy-menu.jsonc'
     state = root / 'reboot-macos-menu-backup.json'
     data = read_menu(menu)
@@ -40,14 +41,15 @@ def main():
         if not state.exists():
             state.write_text(json.dumps(previous, indent=2) + '\n')
         items['system.reboot-macos'] = {
-            'icon': '󰀵', 'label': 'Reboot into macOS',
-            'description': 'Boot macOS once; keep Linux as the default',
+            'icon': '󰀵', 'label': t('menu.label'),
+            'description': t('menu.description'),
+            'searchTerms': ['Reboot into macOS'],
             'when': f'omarchy-shell {ID} ping',
             'action': f'omarchy-shell {ID} reboot',
         }
         # User entries append after stock entries: move Shutdown after ours.
         items['system.shutdown'] = {'when': 'false'}
-        items['system.shutdown-last'] = {'icon': '󰐥', 'label': 'Shutdown', 'action': 'omarchy-system shutdown'}
+        items['system.shutdown-last'] = {'icon': '󰐥', 'label': t('menu.shutdown'), 'action': 'omarchy-system shutdown'}
     else:
         # Remove our rows and restore stock Shutdown. Never restore the obsolete
         # machine-specific reboot action whose privilege rule was retired.

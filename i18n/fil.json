@@ -1,0 +1,10 @@
+{
+  "menu.label": "Mag-reboot sa macOS",
+  "menu.description": "I-boot ang macOS nang isang beses; panatilihing default ang Linux",
+  "menu.shutdown": "I-shut down",
+  "confirm": "Mag-reboot sa macOS (%1)? I-save ang iyong ginagawa bago magpatuloy.",
+  "picker": "Piliin ang iyong macOS volume (hindi tiyak ang awtomatikong pagtukoy):",
+  "yes": "Oo",
+  "no": "Hindi",
+  "failed": "Hindi makapag-reboot sa macOS."
+}

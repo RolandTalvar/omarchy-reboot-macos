@@ -1,0 +1,10 @@
+{
+  "menu.label": "Start på nytt i macOS",
+  "menu.description": "Start macOS én gang; behold Linux som standard",
+  "menu.shutdown": "Slå av",
+  "confirm": "Starte på nytt i macOS (%1)? Lagre arbeidet ditt før du fortsetter.",
+  "picker": "Velg macOS-volumet (automatisk gjenkjenning var tvetydig):",
+  "yes": "Ja",
+  "no": "Nei",
+  "failed": "Kunne ikke starte på nytt i macOS."
+}

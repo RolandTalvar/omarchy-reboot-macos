@@ -1,0 +1,10 @@
+{
+  "menu.label": "Starta om till macOS",
+  "menu.description": "Starta macOS en gång; behåll Linux som standard",
+  "menu.shutdown": "Stäng av",
+  "confirm": "Starta om till macOS (%1)? Spara ditt arbete innan du fortsätter.",
+  "picker": "Välj din macOS-volym (automatisk identifiering var tvetydig):",
+  "yes": "Ja",
+  "no": "Nej",
+  "failed": "Det gick inte att starta om till macOS."
+}

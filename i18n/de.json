@@ -1,0 +1,10 @@
+{
+  "menu.label": "In macOS neu starten",
+  "menu.description": "macOS einmal starten; Linux als Standard behalten",
+  "menu.shutdown": "Herunterfahren",
+  "confirm": "In macOS (%1) neu starten? Speichern Sie Ihre Arbeit, bevor Sie fortfahren.",
+  "picker": "Wählen Sie Ihr macOS-Volume (automatische Erkennung war nicht eindeutig):",
+  "yes": "Ja",
+  "no": "Nein",
+  "failed": "Neustart in macOS fehlgeschlagen."
+}

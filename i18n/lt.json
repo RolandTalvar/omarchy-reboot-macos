@@ -1,0 +1,10 @@
+{
+  "menu.label": "Paleisti iš naujo į macOS",
+  "menu.description": "Vieną kartą paleisti macOS; palikti Linux numatytąja sistema",
+  "menu.shutdown": "Išjungti",
+  "confirm": "Paleisti iš naujo į macOS (%1)? Prieš tęsdami išsaugokite savo darbą.",
+  "picker": "Pasirinkite macOS tomą (automatinis aptikimas buvo neaiškus):",
+  "yes": "Taip",
+  "no": "Ne",
+  "failed": "Nepavyko paleisti iš naujo į macOS."
+}

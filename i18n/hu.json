@@ -1,0 +1,10 @@
+{
+  "menu.label": "Újraindítás macOS-be",
+  "menu.description": "A macOS egyszeri indítása; a Linux marad az alapértelmezett",
+  "menu.shutdown": "Leállítás",
+  "confirm": "Újraindítás macOS-be (%1)? A folytatás előtt mentse a munkáját.",
+  "picker": "Válassza ki a macOS-kötetet (az automatikus felismerés nem volt egyértelmű):",
+  "yes": "Igen",
+  "no": "Nem",
+  "failed": "Nem sikerült újraindítani macOS-be."
+}

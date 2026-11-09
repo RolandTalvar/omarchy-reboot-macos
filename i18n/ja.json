@@ -1,0 +1,10 @@
+{
+  "menu.label": "macOS で再起動",
+  "menu.description": "一度だけ macOS を起動し、Linux を既定のままにする",
+  "menu.shutdown": "シャットダウン",
+  "confirm": "macOS（%1）で再起動しますか？続行する前に作業を保存してください。",
+  "picker": "macOS のボリュームを選択してください（自動検出では特定できませんでした）：",
+  "yes": "はい",
+  "no": "いいえ",
+  "failed": "macOS で再起動できませんでした。"
+}

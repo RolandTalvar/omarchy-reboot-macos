@@ -1,0 +1,10 @@
+{
+  "menu.label": "Redémarrer sous macOS",
+  "menu.description": "Démarrer macOS une fois ; conserver Linux par défaut",
+  "menu.shutdown": "Éteindre",
+  "confirm": "Redémarrer sous macOS (%1) ? Enregistrez votre travail avant de continuer.",
+  "picker": "Sélectionnez votre volume macOS (détection automatique ambiguë) :",
+  "yes": "Oui",
+  "no": "Non",
+  "failed": "Impossible de redémarrer sous macOS."
+}

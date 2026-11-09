@@ -1,0 +1,10 @@
+{
+  "menu.label": "Uruchom ponownie w macOS",
+  "menu.description": "Uruchom macOS raz; zachowaj Linux jako domyślny",
+  "menu.shutdown": "Wyłącz",
+  "confirm": "Uruchomić ponownie w macOS (%1)? Zapisz pracę przed kontynuowaniem.",
+  "picker": "Wybierz wolumin macOS (automatyczne wykrywanie było niejednoznaczne):",
+  "yes": "Tak",
+  "no": "Nie",
+  "failed": "Nie udało się uruchomić ponownie w macOS."
+}

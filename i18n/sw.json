@@ -1,0 +1,10 @@
+{
+  "menu.label": "Anzisha upya kwenye macOS",
+  "menu.description": "Anzisha macOS mara moja; acha Linux iwe chaguo-msingi",
+  "menu.shutdown": "Zima",
+  "confirm": "Anzisha upya kwenye macOS (%1)? Hifadhi kazi yako kabla ya kuendelea.",
+  "picker": "Chagua sehemu yako ya macOS (utambuzi wa kiotomatiki haukuwa wazi):",
+  "yes": "Ndiyo",
+  "no": "Hapana",
+  "failed": "Imeshindwa kuanzisha upya kwenye macOS."
+}

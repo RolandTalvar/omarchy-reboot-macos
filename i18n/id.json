@@ -1,0 +1,10 @@
+{
+  "menu.label": "Mulai ulang ke macOS",
+  "menu.description": "Mulai macOS sekali; pertahankan Linux sebagai bawaan",
+  "menu.shutdown": "Matikan",
+  "confirm": "Mulai ulang ke macOS (%1)? Simpan pekerjaan Anda sebelum melanjutkan.",
+  "picker": "Pilih volume macOS Anda (deteksi otomatis tidak pasti):",
+  "yes": "Ya",
+  "no": "Tidak",
+  "failed": "Tidak dapat memulai ulang ke macOS."
+}

@@ -1,0 +1,10 @@
+{
+  "menu.label": "macOS tizimiga qayta yuklash",
+  "menu.description": "macOS tizimini bir marta yuklash; Linux standart bo‘lib qolsin",
+  "menu.shutdown": "O‘chirish",
+  "confirm": "macOS (%1) tizimiga qayta yuklansinmi? Davom etishdan oldin ishingizni saqlang.",
+  "picker": "macOS jildini tanlang (avtomatik aniqlash noaniq bo‘ldi):",
+  "yes": "Ha",
+  "no": "Yo‘q",
+  "failed": "macOS tizimiga qayta yuklab bo‘lmadi."
+}

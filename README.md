@@ -25,6 +25,14 @@ Run setup after either installation method. Setup requests administrator authent
 
 Omarchy has no plugin API for inserting System menu rows. Setup explicitly updates `~/.config/omarchy/extensions/omarchy-menu.jsonc`, backing it up first. It preserves unrelated entries, hides stock Shutdown, and appends a replacement Shutdown after the macOS action. This preserves the requested order. The macOS row is hidden while this plugin's service is disabled.
 
+## Languages
+
+The menu entry, description, confirmation, Yes/No buttons, volume picker, and user-facing failure message follow **Setup > Language**. Catalogs cover all 50 current Omarchy languages. The menu updates live without a shell restart; new terminal actions read the current selection. Missing translations fall back to the base language, then English. Disk names are never translated. Technical diagnostics and administrator setup output remain in English.
+
+The service uses Omarchy’s `Commons.Translations` and updates only its own existing menu labels (including the relocated Shutdown label). It never creates a missing menu action automatically or replaces a manually changed command. Setup remains an explicit step for installing menu entries and privileges.
+
+Translations are initial translations; corrections from native speakers are welcome. Edit `i18n/<language>.json`, retaining the `%1` placeholder in the confirmation.
+
 ### Privileged helper
 
 Setup installs a root-owned snapshot at `/usr/local/libexec/omarchy-reboot-macos-helper` and a user-specific rule in `/etc/sudoers.d/90-omarchy-reboot-macos-plugin`. The helper accepts only `--list` or `--select-next INDEX`. It validates indices against the live boot list, always uses `--next`, and never reboots or runs user-provided commands. Python runs in isolated mode. The UI confirms before selecting a boot target; Omarchy's normal reboot command then closes applications and reboots.

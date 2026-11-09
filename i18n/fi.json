@@ -1,0 +1,10 @@
+{
+  "menu.label": "Käynnistä macOS uudelleen",
+  "menu.description": "Käynnistä macOS kerran; pidä Linux oletuksena",
+  "menu.shutdown": "Sammuta",
+  "confirm": "Käynnistetäänkö macOS (%1)? Tallenna työsi ennen jatkamista.",
+  "picker": "Valitse macOS-taltio (automaattinen tunnistus oli epäselvä):",
+  "yes": "Kyllä",
+  "no": "Ei",
+  "failed": "macOS:n käynnistäminen epäonnistui."
+}

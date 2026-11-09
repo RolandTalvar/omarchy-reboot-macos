@@ -1,0 +1,10 @@
+{
+  "menu.label": "重新启动到 macOS",
+  "menu.description": "仅启动 macOS 一次；保留 Linux 为默认系统",
+  "menu.shutdown": "关机",
+  "confirm": "重新启动到 macOS（%1）？请先保存工作再继续。",
+  "picker": "请选择 macOS 卷（自动检测结果不明确）：",
+  "yes": "是",
+  "no": "否",
+  "failed": "无法重新启动到 macOS。"
+}

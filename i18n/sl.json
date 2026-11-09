@@ -1,0 +1,10 @@
+{
+  "menu.label": "Znova zaženi v macOS",
+  "menu.description": "Enkrat zaženi macOS; ohrani Linux kot privzeti sistem",
+  "menu.shutdown": "Izklopi",
+  "confirm": "Znova zaženem v macOS (%1)? Pred nadaljevanjem shranite svoje delo.",
+  "picker": "Izberite nosilec macOS (samodejno zaznavanje ni bilo enolično):",
+  "yes": "Da",
+  "no": "Ne",
+  "failed": "Ponovni zagon v macOS ni uspel."
+}

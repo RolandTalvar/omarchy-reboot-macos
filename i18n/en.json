@@ -1,0 +1,10 @@
+{
+  "menu.label": "Reboot into macOS",
+  "menu.description": "Boot macOS once; keep Linux as the default",
+  "menu.shutdown": "Shutdown",
+  "confirm": "Reboot into macOS (%1)? Save your work before continuing.",
+  "picker": "Select your macOS volume (automatic detection was ambiguous):",
+  "yes": "Yes",
+  "no": "No",
+  "failed": "Unable to reboot into macOS."
+}

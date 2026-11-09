@@ -1,0 +1,10 @@
+{
+  "menu.label": "Atosaigh isteach i macOS",
+  "menu.description": "Tosaigh macOS uair amháin; coinnigh Linux mar réamhshocrú",
+  "menu.shutdown": "Múch",
+  "confirm": "Atosaigh isteach i macOS (%1)? Sábháil do chuid oibre sula leanfaidh tú ar aghaidh.",
+  "picker": "Roghnaigh d'imleabhar macOS (bhí an bhrath uathoibríoch débhríoch):",
+  "yes": "Tá",
+  "no": "Níl",
+  "failed": "Níorbh fhéidir atosú isteach i macOS."
+}

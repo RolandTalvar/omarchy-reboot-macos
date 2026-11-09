@@ -1,0 +1,10 @@
+{
+  "menu.label": "macOS ile yeniden başlat",
+  "menu.description": "macOS'u bir kez başlat; Linux varsayılan olarak kalsın",
+  "menu.shutdown": "Kapat",
+  "confirm": "macOS (%1) ile yeniden başlatılsın mı? Devam etmeden önce çalışmanızı kaydedin.",
+  "picker": "macOS biriminizi seçin (otomatik algılama belirsizdi):",
+  "yes": "Evet",
+  "no": "Hayır",
+  "failed": "macOS ile yeniden başlatılamadı."
+}

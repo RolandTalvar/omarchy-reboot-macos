@@ -1,0 +1,10 @@
+{
+  "menu.label": "Herstart naar macOS",
+  "menu.description": "Start macOS één keer; behoud Linux als standaard",
+  "menu.shutdown": "Afsluiten",
+  "confirm": "Herstarten naar macOS (%1)? Sla je werk op voordat je doorgaat.",
+  "picker": "Selecteer je macOS-volume (automatische detectie was niet eenduidig):",
+  "yes": "Ja",
+  "no": "Nee",
+  "failed": "Herstarten naar macOS is mislukt."
+}

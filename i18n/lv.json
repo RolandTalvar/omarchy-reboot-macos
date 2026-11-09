@@ -1,0 +1,10 @@
+{
+  "menu.label": "Pārstartēt uz macOS",
+  "menu.description": "Vienreiz palaist macOS; saglabāt Linux kā noklusējumu",
+  "menu.shutdown": "Izslēgt",
+  "confirm": "Pārstartēt uz macOS (%1)? Pirms turpināt, saglabājiet savu darbu.",
+  "picker": "Atlasiet macOS sējumu (automātiskā noteikšana bija neviennozīmīga):",
+  "yes": "Jā",
+  "no": "Nē",
+  "failed": "Neizdevās pārstartēt uz macOS."
+}

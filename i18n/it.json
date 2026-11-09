@@ -1,0 +1,10 @@
+{
+  "menu.label": "Riavvia in macOS",
+  "menu.description": "Avvia macOS una volta; mantieni Linux come predefinito",
+  "menu.shutdown": "Spegni",
+  "confirm": "Riavviare in macOS (%1)? Salva il lavoro prima di continuare.",
+  "picker": "Seleziona il volume macOS (il rilevamento automatico era ambiguo):",
+  "yes": "Sì",
+  "no": "No",
+  "failed": "Impossibile riavviare in macOS."
+}

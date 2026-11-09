@@ -1,0 +1,10 @@
+{
+  "menu.label": "Reiniciar no macOS",
+  "menu.description": "Iniciar o macOS uma vez; manter o Linux como predefinição",
+  "menu.shutdown": "Desligar",
+  "confirm": "Reiniciar no macOS (%1)? Guarde o seu trabalho antes de continuar.",
+  "picker": "Selecione o volume do macOS (a deteção automática foi ambígua):",
+  "yes": "Sim",
+  "no": "Não",
+  "failed": "Não foi possível reiniciar no macOS."
+}

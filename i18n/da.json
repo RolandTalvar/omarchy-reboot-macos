@@ -1,0 +1,10 @@
+{
+  "menu.label": "Genstart til macOS",
+  "menu.description": "Start macOS én gang; behold Linux som standard",
+  "menu.shutdown": "Luk ned",
+  "confirm": "Genstart til macOS (%1)? Gem dit arbejde, før du fortsætter.",
+  "picker": "Vælg din macOS-diskenhed (automatisk registrering var tvetydig):",
+  "yes": "Ja",
+  "no": "Nej",
+  "failed": "Kunne ikke genstarte til macOS."
+}

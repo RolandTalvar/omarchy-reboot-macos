@@ -1,0 +1,10 @@
+{
+  "menu.label": "Khởi động lại vào macOS",
+  "menu.description": "Khởi động macOS một lần; giữ Linux làm mặc định",
+  "menu.shutdown": "Tắt máy",
+  "confirm": "Khởi động lại vào macOS (%1)? Hãy lưu công việc trước khi tiếp tục.",
+  "picker": "Chọn ổ macOS của bạn (kết quả tự động phát hiện không rõ ràng):",
+  "yes": "Có",
+  "no": "Không",
+  "failed": "Không thể khởi động lại vào macOS."
+}

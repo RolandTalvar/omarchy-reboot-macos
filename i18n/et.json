@@ -1,0 +1,10 @@
+{
+  "menu.label": "Taaskäivita macOS-i",
+  "menu.description": "Käivita macOS üks kord; Linux jääb vaikimisi süsteemiks",
+  "menu.shutdown": "Lülita välja",
+  "confirm": "Kas taaskäivitada macOS-i (%1)? Enne jätkamist salvesta oma töö.",
+  "picker": "Vali macOS-i köide (automaatne tuvastamine oli ebaselge):",
+  "yes": "Jah",
+  "no": "Ei",
+  "failed": "macOS-i taaskäivitamine ebaõnnestus."
+}

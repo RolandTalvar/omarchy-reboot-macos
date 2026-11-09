@@ -1,0 +1,10 @@
+{
+  "menu.label": "Endurræsa í macOS",
+  "menu.description": "Ræsa macOS einu sinni; halda Linux sem sjálfgefnu kerfi",
+  "menu.shutdown": "Slökkva",
+  "confirm": "Endurræsa í macOS (%1)? Vistaðu vinnuna þína áður en þú heldur áfram.",
+  "picker": "Veldu macOS-bindi (sjálfvirk greining var ekki ótvíræð):",
+  "yes": "Já",
+  "no": "Nei",
+  "failed": "Ekki tókst að endurræsa í macOS."
+}

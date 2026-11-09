@@ -1,0 +1,10 @@
+{
+  "menu.label": "Repornește în macOS",
+  "menu.description": "Pornește macOS o dată; păstrează Linux ca implicit",
+  "menu.shutdown": "Oprește",
+  "confirm": "Reporniți în macOS (%1)? Salvați lucrul înainte de a continua.",
+  "picker": "Selectați volumul macOS (detectarea automată a fost ambiguă):",
+  "yes": "Da",
+  "no": "Nu",
+  "failed": "Nu s-a putut reporni în macOS."
+}

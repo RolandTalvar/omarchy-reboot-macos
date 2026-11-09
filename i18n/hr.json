@@ -1,0 +1,10 @@
+{
+  "menu.label": "Ponovno pokreni u macOS",
+  "menu.description": "Pokreni macOS jednom; zadrži Linux kao zadani sustav",
+  "menu.shutdown": "Isključi",
+  "confirm": "Ponovno pokrenuti u macOS (%1)? Spremite svoj rad prije nastavka.",
+  "picker": "Odaberite macOS jedinicu (automatsko otkrivanje nije bilo jednoznačno):",
+  "yes": "Da",
+  "no": "Ne",
+  "failed": "Ponovno pokretanje u macOS nije uspjelo."
+}

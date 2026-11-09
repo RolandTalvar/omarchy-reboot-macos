@@ -1,0 +1,10 @@
+{
+  "menu.label": "Reštartovať do macOS",
+  "menu.description": "Spustiť macOS raz; ponechať Linux ako predvolený",
+  "menu.shutdown": "Vypnúť",
+  "confirm": "Reštartovať do macOS (%1)? Pred pokračovaním si uložte prácu.",
+  "picker": "Vyberte zväzok macOS (automatické rozpoznanie nebolo jednoznačné):",
+  "yes": "Áno",
+  "no": "Nie",
+  "failed": "Reštartovanie do macOS zlyhalo."
+}
