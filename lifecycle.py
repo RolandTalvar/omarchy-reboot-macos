@@ -86,6 +86,7 @@ def disable_boot_check():
             # Never stop this service from inside its own cleanup process.
             run('/usr/bin/systemctl','disable',UNIT+'.service')
         unlink_synced(boot_link)
+        sync_enablement()
 
 
 def stop_watcher():
@@ -133,7 +134,8 @@ def watcher_state():
         state[key] = result.returncode == 0
     # is-enabled also succeeds for static units; only our actual boot link
     # represents enablement that rollback needs to preserve.
-    state['boot_enabled'] = (UNITS/'multi-user.target.wants'/(UNIT+'.service')).is_symlink()
+    state['boot_enabled'] = ((UNITS/(UNIT+'.service')).is_file() and
+                             (UNITS/'multi-user.target.wants'/(UNIT+'.service')).is_symlink())
     return state
 
 
@@ -301,7 +303,7 @@ def recover_installation():
             run('/usr/bin/systemctl', 'enable', UNIT+'.path')
         if saved['watcher']['active']:
             run('/usr/bin/systemctl', 'start', UNIT+'.path')
-        if saved['watcher'].get('boot_enabled',False):
+        if saved['watcher'].get('boot_enabled',False) and (UNITS/(UNIT+'.service')).is_file():
             run('/usr/bin/systemctl', 'enable', UNIT+'.service')
         else: disable_boot_check()
         sync_enablement()

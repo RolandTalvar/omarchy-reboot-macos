@@ -53,4 +53,6 @@ class LifecycleTests(unittest.TestCase):
                 self.assertFalse(lifecycle.watcher_state()['boot_enabled'])
                 wants=units/'multi-user.target.wants';wants.mkdir()
                 (wants/(lifecycle.UNIT+'.service')).symlink_to(units/(lifecycle.UNIT+'.service'))
+                self.assertFalse(lifecycle.watcher_state()['boot_enabled'])
+                (units/(lifecycle.UNIT+'.service')).write_text('[Service]\nExecStart=/usr/bin/true\n')
                 self.assertTrue(lifecycle.watcher_state()['boot_enabled'])
