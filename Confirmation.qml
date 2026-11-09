@@ -20,6 +20,7 @@ FloatingWindow {
   property bool loading: false
   property bool failed: false
   property bool previewMode: false
+  readonly property bool submitting: bootProcess.running
   readonly property string script: decodeURIComponent(Qt.resolvedUrl("reboot_macos.py").toString().slice(7))
 
   Commons.Translations { id: strings; directory: Qt.resolvedUrl("i18n") }
@@ -45,6 +46,13 @@ FloatingWindow {
     previewMode = true
     populate(candidates)
     visible = true
+  }
+  function cancel() {
+    if (!submitting) visible = false
+  }
+  onVisibleChanged: {
+    // A window-manager close request is not a cancellation after acceptance.
+    if (!visible && submitting) Qt.callLater(function() { if (root.submitting) root.visible = true })
   }
   function accept() {
     if (!selected || loading || failed) return
@@ -80,7 +88,7 @@ FloatingWindow {
     spacing: 20
     LayoutMirroring.enabled: Commons.I18n.rightToLeft
     LayoutMirroring.childrenInherit: true
-    Keys.onEscapePressed: root.visible = false
+    Keys.onEscapePressed: root.cancel()
 
     Text {
       Layout.fillWidth: true
@@ -95,7 +103,7 @@ FloatingWindow {
     }
     Text {
       Layout.fillWidth: true
-      text: root.failed ? strings.t("failed") : root.loading ? "…" : root.selected
+      text: root.failed ? strings.t("failed") : root.submitting ? strings.t("rebooting", "Rebooting…") : root.loading ? "…" : root.selected
         ? strings.t("confirm").arg("\u2068" + root.selected.name + "\u2069") : strings.t("picker")
       textFormat: Text.PlainText
       color: root.failed ? Commons.Color.urgent : Commons.Color.foreground
@@ -126,9 +134,10 @@ FloatingWindow {
       Ui.Button {
         id: cancelButton
         text: strings.t("no")
+        enabled: !root.submitting
         focusable: true
         bordered: true
-        onClicked: root.visible = false
+        onClicked: root.cancel()
       }
       Ui.Button {
         text: strings.t("yes")
