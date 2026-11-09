@@ -343,3 +343,9 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(f.files(),before);self.assertEqual(f.menu.read_bytes(),menu)
         self.assertFalse((other/'omarchy/reboot-macos-menu-state.json').exists())
         self.assertEqual(__import__('json').loads(f.record.read_text())['config'],str(f.config))
+
+    def test_cleanup_waits_for_its_config_filesystem(self):
+        f=self.fixture;f.install()
+        service=(f.units/(lifecycle.UNIT+'.service')).read_text()
+        import json
+        self.assertIn('RequiresMountsFor='+json.dumps(str(f.config)),service)
