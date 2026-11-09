@@ -18,6 +18,10 @@
 
 Disposable installation tests cover repeated setup, replacement of privileged code only during explicit setup, preservation of original removal state and user edits, migration of legacy menu backups, removal of obsolete trusted modules, and retry after an injected upgrade failure. These checks run in CI without changing the host installation or boot target.
 
+## Independent recovery review
+
+Claude performed read-only static reviews of the privileged lifecycle and APFS/parser changes. Confirmed findings were addressed in separate commits with focused regression tests. The suite now contains 101 tests, including interrupted rollback, atomic restoration, damaged-record recovery, watcher activation before privilege grants, and stale-state reconciliation. Static review does not replace the pending hardware and linguistic checks below.
+
 ## Full boot cycle — pending user execution
 
 This check interrupts the session. Save work first and perform it when ready:
