@@ -2,6 +2,8 @@
 
 Adds **Reboot into macOS** between **Reboot** and **Shutdown** in the System menu (Super+Escape). No bar icon.
 
+![System menu showing Reboot into macOS between Reboot and Shutdown](preview.png)
+
 The action detects a single boot volume named `macOS …`, `Macintosh …`, or `Mac OS …`, shows its name in a confirmation, and selects it for the **next boot only**. Linux remains the default. If no label matches, or more than one matches, a picker lets you identify the macOS volume. Names are labels, not proof of which OS a volume contains: custom names require your choice.
 
 ## Requirements
