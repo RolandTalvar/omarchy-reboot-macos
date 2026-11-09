@@ -349,3 +349,15 @@ class TransactionTests(unittest.TestCase):
         service=(f.units/(lifecycle.UNIT+'.service')).read_text()
         import json
         self.assertIn('RequiresMountsFor='+json.dumps(str(f.plugin)),service)
+
+    def test_rollback_recreates_boot_link_after_stopping_an_inactive_watcher(self):
+        f=self.fixture;f.install();f.active=False
+        link=f.units/'multi-user.target.wants'/(lifecycle.UNIT+'.service')
+        self.assertTrue(link.exists());f.calls.clear();f.fail_menu='install'
+        with self.assertRaises(OSError):f.install()
+        disabled=('/usr/bin/systemctl','disable',lifecycle.UNIT+'.service')
+        enabled=('/usr/bin/systemctl','enable',lifecycle.UNIT+'.service')
+        index=f.calls.index(disabled)
+        self.assertIn(enabled,f.calls[index+1:])
+        self.assertTrue(link.exists());self.assertFalse(f.active)
+        self.assertTrue(f.enabled);self.assertFalse(f.transaction.exists())
