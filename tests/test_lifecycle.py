@@ -11,6 +11,8 @@ class LifecycleTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         lock = patch.object(lifecycle, 'LOCK', Path(temporary.name)/'setup.lock')
         lock.start(); self.addCleanup(lock.stop)
+        isolated=patch.multiple(lifecycle,LEGACY=Path(temporary.name)/'legacy',TRANSACTION=Path(temporary.name)/'transaction')
+        isolated.start();self.addCleanup(isolated.stop)
 
     def test_removed_directory_triggers_cleanup(self):
         with tempfile.TemporaryDirectory() as directory:
