@@ -6,5 +6,6 @@
   "picker": "macOS 볼륨을 선택하세요(자동 감지 결과가 명확하지 않음):",
   "yes": "예",
   "no": "아니요",
-  "failed": "macOS로 재시동할 수 없습니다."
+  "failed": "macOS로 재시동할 수 없습니다.",
+  "rebooting": "macOS로 재시동 중…"
 }

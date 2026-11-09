@@ -6,5 +6,6 @@
   "picker": "Chagua sehemu yako ya macOS (utambuzi wa kiotomatiki haukuwa wazi):",
   "yes": "Ndiyo",
   "no": "Hapana",
-  "failed": "Imeshindwa kuanzisha upya kwenye macOS."
+  "failed": "Imeshindwa kuanzisha upya kwenye macOS.",
+  "rebooting": "Inaanzisha upya kwenye macOS…"
 }

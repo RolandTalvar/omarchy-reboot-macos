@@ -6,5 +6,6 @@
   "picker": "請選擇 macOS 卷宗（自動偵測結果不明確）：",
   "yes": "是",
   "no": "否",
-  "failed": "無法重新啟動至 macOS。"
+  "failed": "無法重新啟動至 macOS。",
+  "rebooting": "正在重新啟動至 macOS…"
 }

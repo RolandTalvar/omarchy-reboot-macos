@@ -6,5 +6,6 @@
   "picker": "Välj din macOS-volym (automatisk identifiering var tvetydig):",
   "yes": "Ja",
   "no": "Nej",
-  "failed": "Det gick inte att starta om till macOS."
+  "failed": "Det gick inte att starta om till macOS.",
+  "rebooting": "Startar om till macOS…"
 }

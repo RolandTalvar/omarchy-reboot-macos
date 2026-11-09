@@ -6,5 +6,6 @@
   "picker": "Veldu macOS-bindi (sjálfvirk greining var ekki ótvíræð):",
   "yes": "Já",
   "no": "Nei",
-  "failed": "Ekki tókst að endurræsa í macOS."
+  "failed": "Ekki tókst að endurræsa í macOS.",
+  "rebooting": "Endurræsi í macOS…"
 }

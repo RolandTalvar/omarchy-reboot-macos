@@ -6,5 +6,6 @@
   "picker": "macOS biriminizi seçin (otomatik algılama belirsizdi):",
   "yes": "Evet",
   "no": "Hayır",
-  "failed": "macOS ile yeniden başlatılamadı."
+  "failed": "macOS ile yeniden başlatılamadı.",
+  "rebooting": "macOS ile yeniden başlatılıyor…"
 }

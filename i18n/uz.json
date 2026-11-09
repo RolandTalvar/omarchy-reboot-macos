@@ -6,5 +6,6 @@
   "picker": "macOS jildini tanlang (avtomatik aniqlash noaniq bo‘ldi):",
   "yes": "Ha",
   "no": "Yo‘q",
-  "failed": "macOS tizimiga qayta yuklab bo‘lmadi."
+  "failed": "macOS tizimiga qayta yuklab bo‘lmadi.",
+  "rebooting": "macOS tizimiga qayta yuklanmoqda…"
 }

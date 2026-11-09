@@ -6,5 +6,6 @@
   "picker": "Vyberte svazek macOS (automatické rozpoznání nebylo jednoznačné):",
   "yes": "Ano",
   "no": "Ne",
-  "failed": "Restartování do macOS se nezdařilo."
+  "failed": "Restartování do macOS se nezdařilo.",
+  "rebooting": "Restartování do macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "Selectați volumul macOS (detectarea automată a fost ambiguă):",
   "yes": "Da",
   "no": "Nu",
-  "failed": "Nu s-a putut reporni în macOS."
+  "failed": "Nu s-a putut reporni în macOS.",
+  "rebooting": "Se repornește în macOS…"
 }

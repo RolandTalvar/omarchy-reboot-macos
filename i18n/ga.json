@@ -6,5 +6,6 @@
   "picker": "Roghnaigh d'imleabhar macOS (bhí an bhrath uathoibríoch débhríoch):",
   "yes": "Tá",
   "no": "Níl",
-  "failed": "Níorbh fhéidir atosú isteach i macOS."
+  "failed": "Níorbh fhéidir atosú isteach i macOS.",
+  "rebooting": "Ag atosú isteach i macOS…"
 }

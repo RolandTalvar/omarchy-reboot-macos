@@ -6,5 +6,6 @@
   "picker": "Válassza ki a macOS-kötetet (az automatikus felismerés nem volt egyértelmű):",
   "yes": "Igen",
   "no": "Nem",
-  "failed": "Nem sikerült újraindítani macOS-be."
+  "failed": "Nem sikerült újraindítani macOS-be.",
+  "rebooting": "Újraindítás macOS-be…"
 }

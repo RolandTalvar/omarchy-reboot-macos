@@ -6,5 +6,6 @@
   "picker": "Piliin ang iyong macOS volume (hindi tiyak ang awtomatikong pagtukoy):",
   "yes": "Oo",
   "no": "Hindi",
-  "failed": "Hindi makapag-reboot sa macOS."
+  "failed": "Hindi makapag-reboot sa macOS.",
+  "rebooting": "Nagre-reboot sa macOS…"
 }

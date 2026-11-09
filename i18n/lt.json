@@ -6,5 +6,6 @@
   "picker": "Pasirinkite macOS tomą (automatinis aptikimas buvo neaiškus):",
   "yes": "Taip",
   "no": "Ne",
-  "failed": "Nepavyko paleisti iš naujo į macOS."
+  "failed": "Nepavyko paleisti iš naujo į macOS.",
+  "rebooting": "Paleidžiama iš naujo į macOS…"
 }

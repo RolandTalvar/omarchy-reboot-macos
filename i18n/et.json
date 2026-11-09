@@ -8,5 +8,6 @@
   "no": "Ei",
   "failed": "macOS-i taaskäivitamine ebaõnnestus.",
   "recovery.cleared": "Taaskäivitamine ebaõnnestus. Ühekordne käivitusvalik tühistati; vaikimisi käivitussüsteem ei muutunud.",
-  "recovery.pending": "Taaskäivitamine ebaõnnestus ja ühekordset valikut ei saanud tühistada. Järgmine käsitsi taaskäivitus võib endiselt käivitada macOS-i."
+  "recovery.pending": "Taaskäivitamine ebaõnnestus ja ühekordset valikut ei saanud tühistada. Järgmine käsitsi taaskäivitus võib endiselt käivitada macOS-i.",
+  "rebooting": "Taaskäivitamine macOS-i…"
 }

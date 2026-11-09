@@ -8,5 +8,6 @@
   "no": "No",
   "failed": "Unable to reboot into macOS.",
   "recovery.cleared": "The reboot failed. The one-time boot selection was cleared; your default startup system is unchanged.",
-  "recovery.pending": "The reboot failed and the one-time selection could not be cleared. Your next manual restart may still boot macOS."
+  "recovery.pending": "The reboot failed and the one-time selection could not be cleared. Your next manual restart may still boot macOS.",
+  "rebooting": "Rebooting into macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "Wählen Sie Ihr macOS-Volume (automatische Erkennung war nicht eindeutig):",
   "yes": "Ja",
   "no": "Nein",
-  "failed": "Neustart in macOS fehlgeschlagen."
+  "failed": "Neustart in macOS fehlgeschlagen.",
+  "rebooting": "Neustart in macOS…"
 }

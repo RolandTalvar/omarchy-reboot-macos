@@ -6,5 +6,6 @@
   "picker": "Chọn ổ macOS của bạn (kết quả tự động phát hiện không rõ ràng):",
   "yes": "Có",
   "no": "Không",
-  "failed": "Không thể khởi động lại vào macOS."
+  "failed": "Không thể khởi động lại vào macOS.",
+  "rebooting": "Đang khởi động lại vào macOS…"
 }

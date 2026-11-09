@@ -6,5 +6,6 @@
   "picker": "Wybierz wolumin macOS (automatyczne wykrywanie było niejednoznaczne):",
   "yes": "Tak",
   "no": "Nie",
-  "failed": "Nie udało się uruchomić ponownie w macOS."
+  "failed": "Nie udało się uruchomić ponownie w macOS.",
+  "rebooting": "Ponowne uruchamianie w macOS…"
 }

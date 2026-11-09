@@ -6,5 +6,6 @@
   "picker": "Velg macOS-volumet (automatisk gjenkjenning var tvetydig):",
   "yes": "Ja",
   "no": "Nei",
-  "failed": "Kunne ikke starte på nytt i macOS."
+  "failed": "Kunne ikke starte på nytt i macOS.",
+  "rebooting": "Starter på nytt i macOS…"
 }

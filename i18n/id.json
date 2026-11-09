@@ -6,5 +6,6 @@
   "picker": "Pilih volume macOS Anda (deteksi otomatis tidak pasti):",
   "yes": "Ya",
   "no": "Tidak",
-  "failed": "Tidak dapat memulai ulang ke macOS."
+  "failed": "Tidak dapat memulai ulang ke macOS.",
+  "rebooting": "Memulai ulang ke macOS…"
 }

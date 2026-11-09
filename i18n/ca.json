@@ -6,5 +6,6 @@
   "picker": "Seleccioneu el volum del macOS (la detecció automàtica era ambigua):",
   "yes": "Sí",
   "no": "No",
-  "failed": "No s'ha pogut reiniciar al macOS."
+  "failed": "No s'ha pogut reiniciar al macOS.",
+  "rebooting": "S'està reiniciant al macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "Atlasiet macOS sējumu (automātiskā noteikšana bija neviennozīmīga):",
   "yes": "Jā",
   "no": "Nē",
-  "failed": "Neizdevās pārstartēt uz macOS."
+  "failed": "Neizdevās pārstartēt uz macOS.",
+  "rebooting": "Notiek pārstartēšana uz macOS…"
 }

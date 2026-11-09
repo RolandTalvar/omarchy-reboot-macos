@@ -6,5 +6,6 @@
   "picker": "Seleziona il volume macOS (il rilevamento automatico era ambiguo):",
   "yes": "Sì",
   "no": "No",
-  "failed": "Impossibile riavviare in macOS."
+  "failed": "Impossibile riavviare in macOS.",
+  "rebooting": "Riavvio in macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "Odaberite macOS jedinicu (automatsko otkrivanje nije bilo jednoznačno):",
   "yes": "Da",
   "no": "Ne",
-  "failed": "Ponovno pokretanje u macOS nije uspjelo."
+  "failed": "Ponovno pokretanje u macOS nije uspjelo.",
+  "rebooting": "Ponovno pokretanje u macOS…"
 }

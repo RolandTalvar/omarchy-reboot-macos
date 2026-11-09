@@ -6,5 +6,6 @@
   "picker": "Vyberte zväzok macOS (automatické rozpoznanie nebolo jednoznačné):",
   "yes": "Áno",
   "no": "Nie",
-  "failed": "Reštartovanie do macOS zlyhalo."
+  "failed": "Reštartovanie do macOS zlyhalo.",
+  "rebooting": "Reštartovanie do macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "请选择 macOS 卷（自动检测结果不明确）：",
   "yes": "是",
   "no": "否",
-  "failed": "无法重新启动到 macOS。"
+  "failed": "无法重新启动到 macOS。",
+  "rebooting": "正在重新启动到 macOS…"
 }

@@ -6,5 +6,6 @@
   "picker": "Valitse macOS-taltio (automaattinen tunnistus oli epäselvä):",
   "yes": "Kyllä",
   "no": "Ei",
-  "failed": "macOS:n käynnistäminen epäonnistui."
+  "failed": "macOS:n käynnistäminen epäonnistui.",
+  "rebooting": "Käynnistetään macOS…"
 }

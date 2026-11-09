@@ -6,5 +6,6 @@
   "picker": "Sélectionnez votre volume macOS (détection automatique ambiguë) :",
   "yes": "Oui",
   "no": "Non",
-  "failed": "Impossible de redémarrer sous macOS."
+  "failed": "Impossible de redémarrer sous macOS.",
+  "rebooting": "Redémarrage sous macOS…"
 }

@@ -89,3 +89,10 @@ class TranslationTests(unittest.TestCase):
                 self.assertIn('Ei',args)
                 self.assertIn('macOS Sequoia',args[-1])
                 self.assertNotIn('Save your work',args[-1])
+
+    def test_all_literal_qml_keys_exist_in_the_english_catalog(self):
+        english=json.loads((CATALOGS/'en.json').read_text())
+        keys=set()
+        for path in CATALOGS.parent.glob('*.qml'):
+            keys.update(re.findall(r"strings\.t\(\s*[\"']([^\"']+)[\"']",path.read_text()))
+        self.assertTrue(keys);self.assertTrue(keys <= set(english),keys-set(english))

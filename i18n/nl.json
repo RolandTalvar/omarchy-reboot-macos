@@ -6,5 +6,6 @@
   "picker": "Selecteer je macOS-volume (automatische detectie was niet eenduidig):",
   "yes": "Ja",
   "no": "Nee",
-  "failed": "Herstarten naar macOS is mislukt."
+  "failed": "Herstarten naar macOS is mislukt.",
+  "rebooting": "Herstarten naar macOS…"
 }

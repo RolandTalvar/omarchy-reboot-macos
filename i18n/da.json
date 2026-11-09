@@ -6,5 +6,6 @@
   "picker": "Vælg din macOS-diskenhed (automatisk registrering var tvetydig):",
   "yes": "Ja",
   "no": "Nej",
-  "failed": "Kunne ikke genstarte til macOS."
+  "failed": "Kunne ikke genstarte til macOS.",
+  "rebooting": "Genstarter til macOS…"
 }

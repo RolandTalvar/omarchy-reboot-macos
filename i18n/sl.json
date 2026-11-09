@@ -6,5 +6,6 @@
   "picker": "Izberite nosilec macOS (samodejno zaznavanje ni bilo enolično):",
   "yes": "Da",
   "no": "Ne",
-  "failed": "Ponovni zagon v macOS ni uspel."
+  "failed": "Ponovni zagon v macOS ni uspel.",
+  "rebooting": "Ponovni zagon v macOS…"
 }
