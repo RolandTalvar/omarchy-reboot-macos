@@ -42,3 +42,17 @@ class RemovalTests(unittest.TestCase):
     def test_cleanup_service_retries_failed_restoration(self):
         text=(self.f.units/(lifecycle.UNIT+'.service')).read_text()
         self.assertIn('Restart=on-failure',text);self.assertIn('RestartSec=15s',text)
+
+    def test_known_legacy_rules_are_revoked_on_removal(self):
+        for command in ['--set-boot macOS Sequoia','--set-boot-macos']:
+            if not self.f.record.exists():self.f.install()
+            self.f.legacy.write_text('user ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next '+command+' --yes\n')
+            self.remove();self.assertFalse(self.f.legacy.exists())
+    def test_unknown_administrator_rule_is_not_deleted(self):
+        self.f.legacy.write_text('# administrator managed rule\n')
+        self.remove();self.assertEqual(self.f.legacy.read_text(),'# administrator managed rule\n')
+    def test_legacy_rule_is_revoked_without_an_installation_record(self):
+        self.f.record.unlink()
+        self.f.legacy.write_text('user ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot-macos --yes\n')
+        lifecycle.remove_for_account('user',str(self.f.config))
+        self.assertFalse(self.f.legacy.exists())

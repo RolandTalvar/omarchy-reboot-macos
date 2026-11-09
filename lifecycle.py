@@ -81,10 +81,20 @@ def stop_watcher():
         unlink_synced(UNITS/'multi-user.target.wants'/(UNIT+'.path'))
 
 
+def retire_legacy_rule(account):
+    known = {
+        f'{account} ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot macOS Sequoia --yes',
+        f'{account} ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot-macos --yes',
+    }
+    if LEGACY.exists() and LEGACY.read_text().strip() in known:
+        unlink_synced(LEGACY)
+
+
 def remove(record):
     # Revoke access first, even if an invalid user menu needs later repair.
     unlink_synced(RULE)
     unlink_synced(HELPER)
+    retire_legacy_rule(record['account'])
     menu_code = LIB/'menu_state.py'
     if menu_code.exists():
         run('/usr/bin/runuser','-u',record['account'],'--','/usr/bin/python3','-I',str(menu_code),'remove',record['config'])
@@ -308,8 +318,7 @@ def install(account, config, source):
         for suffix in ['path','service']:
             name = UNIT+'.'+suffix
             write_root(UNITS/name, (stage/name).read_text())
-        if LEGACY.exists() and LEGACY.read_text().strip() == f'{account} ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot macOS Sequoia --yes':
-            LEGACY.unlink()
+        retire_legacy_rule(account)
         saved['menu_started'] = True
         write_journal(saved)
         user_menu(stage, 'install', record)
