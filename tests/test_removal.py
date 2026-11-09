@@ -80,3 +80,18 @@ class RemovalTests(unittest.TestCase):
                 with self.assertRaises(ValueError):lifecycle.remove_for_account('user',str(f.config))
                 self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
                 self.assertEqual(lifecycle.read_journal()['phase'],'restored')
+
+    def test_recovered_removal_retains_boot_retry_until_menu_is_repaired(self):
+        f=self.f;good=f.menu.read_text();f.fail_menu='install'
+        with patch.object(lifecycle,'recover_installation',side_effect=[None,OSError('Interrupted rollback')]):
+            with self.assertRaises(OSError):f.install()
+        import shutil
+        shutil.rmtree(f.plugin);f.menu.write_text('invalid user menu')
+        with self.assertRaises(ValueError):lifecycle.dispatch(['check'])
+        link=f.units/'multi-user.target.wants'/(lifecycle.UNIT+'.service')
+        self.assertTrue(link.exists());self.assertTrue(f.enabled and f.active)
+        self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
+        self.assertTrue(f.record.exists())
+        f.menu.write_text(good);lifecycle.dispatch(['check'])
+        self.assertFalse(link.is_symlink());self.assertFalse(f.record.exists())
+        self.assertEqual(f.menu.read_bytes(),f.initial_menu)

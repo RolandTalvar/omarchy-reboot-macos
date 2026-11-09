@@ -229,7 +229,7 @@ class TransactionTests(unittest.TestCase):
             with self.assertRaises(OSError):f.install()
         lifecycle.shutil.rmtree(f.plugin);real()
         self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
-        self.assertFalse(f.enabled or f.active);self.assertFalse(f.transaction.exists())
+        self.assertTrue(f.enabled and f.active);self.assertFalse(f.transaction.exists())
 
     def test_interrupted_file_restore_keeps_live_record_and_code_intact(self):
         f=self.fixture;f.seed_old_install()

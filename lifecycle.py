@@ -295,7 +295,9 @@ def recover_installation():
     previous=json.loads(RECORD.read_text()) if RECORD.exists() else saved['record']
     if not Path(previous['plugin']).exists():
         revoke_access(previous['account'])
-        stop_watcher()
+        # Keep retries available until remove() has restored the user menu.
+        # A malformed menu must not strand cleanup after the next boot.
+        if not RECORD.exists(): stop_watcher()  # First install rolled back completely.
     else:
         if not saved['watcher']['enabled'] or not saved['watcher']['active']:
             stop_watcher()
