@@ -98,7 +98,6 @@ def remove(record):
     menu_code = LIB/'menu_state.py'
     if menu_code.exists():
         run('/usr/bin/runuser','-u',record['account'],'--','/usr/bin/python3','-I',str(menu_code),'remove',record['config'])
-    run('/usr/bin/visudo','-c')
     stop_watcher()
     for suffix in ['path','service']: unlink_synced(UNITS/(UNIT+'.'+suffix))
     run('/usr/bin/systemctl','daemon-reload')
@@ -211,7 +210,7 @@ def read_journal():
     for name in ['journal.json','journal.mirror.json']:
         try:
             saved = json.loads((TRANSACTION/name).read_text())
-            if saved['phase'] not in ['installing','committed']:
+            if saved['phase'] not in ['installing','restored','committed']:
                 raise ValueError('Invalid transaction phase')
             if [entry['path'] for entry in saved['artifacts']] != [str(path) for path in artifacts()]:
                 raise ValueError('Invalid transaction artifact paths')
@@ -236,19 +235,20 @@ def recover_installation():
         user_menu(stage, 'commit', saved['record'])
         finish_transaction()
         return
-    if (UNITS/(UNIT+'.path')).exists():
-        run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
+    if saved['phase'] == 'installing':
+        if (UNITS/(UNIT+'.path')).exists():
+            run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
+        restore_artifacts(saved['artifacts'])
+        saved['phase'] = 'restored'
+        write_journal(saved)
     if saved['menu_started']:
-        # The staged code stays available even if installed files were only
-        # partly written or belonged to an older plugin version.
         user_menu(stage, 'rollback', saved['record'])
-    restore_artifacts(saved['artifacts'])
     run('/usr/bin/systemctl', 'daemon-reload')
     if saved['watcher']['enabled']:
         run('/usr/bin/systemctl', 'enable', UNIT+'.path')
     if saved['watcher']['active']:
         run('/usr/bin/systemctl', 'start', UNIT+'.path')
-    run('/usr/bin/visudo', '-c')
+    if RULE.exists(): run('/usr/bin/visudo', '-cf', str(RULE))
     finish_transaction()
 
 
@@ -354,29 +354,46 @@ def main(args):
         dispatch(args)
 
 
+def revoke_access(account):
+    unlink_synced(RULE)
+    unlink_synced(HELPER)
+    retire_legacy_rule(account)
+
+
+def cleanup_requested(record):
+    revoke_access(record['account'])
+    try:
+        if TRANSACTION.exists(): recover_installation()
+        current=json.loads(RECORD.read_text()) if RECORD.exists() else record
+        remove(current)
+    except BaseException:
+        # Recovery may have restored an earlier permission rule before a menu
+        # failure. Every failed cleanup attempt must still leave it revoked.
+        revoke_access(record['account'])
+        raise
+
+
 def dispatch(args):
     if args==['check']:
+        record=json.loads(RECORD.read_text()) if RECORD.exists() else None
+        if record and not Path(record['plugin']).exists():
+            cleanup_requested(record)
+            return
         if TRANSACTION.exists(): recover_installation()
         if RECORD.exists():
             record=json.loads(RECORD.read_text())
-            if not Path(record['plugin']).exists(): remove(record)
+            if not Path(record['plugin']).exists(): cleanup_requested(record)
     elif len(args)==4 and args[0] in ['install','remove']:
         mode,account,config,source=args
         if not re.fullmatch(r'[a-z_][a-z0-9_-]*',account): raise ValueError('Invalid account')
         if mode=='install': install(account,config,source)
-        else:
-            if TRANSACTION.exists(): recover_installation()
-            remove_for_account(account, config)
+        else: remove_for_account(account,config)
     else: raise ValueError('Invalid setup operation')
 
 
 def remove_for_account(account, config):
-    if RECORD.exists():
-        record=json.loads(RECORD.read_text())
-        if record['account']!=account: raise ValueError('Installation belongs to another user')
-        remove(record)
-    else:
-        # Compatibility cleanup for installations before the watcher.
-        remove({'account':account,'config':str(Path(config).resolve())})
+    record=json.loads(RECORD.read_text()) if RECORD.exists() else {'account':account,'config':str(Path(config).resolve())}
+    if record['account']!=account: raise ValueError('Installation belongs to another user')
+    cleanup_requested(record)
 
 if __name__=='__main__': main(sys.argv[1:])

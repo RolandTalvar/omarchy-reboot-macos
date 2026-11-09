@@ -56,3 +56,27 @@ class RemovalTests(unittest.TestCase):
         self.f.legacy.write_text('user ALL=(root) NOPASSWD: /usr/bin/asahi-bless --next --set-boot-macos --yes\n')
         lifecycle.remove_for_account('user',str(self.f.config))
         self.assertFalse(self.f.legacy.exists())
+
+    def test_damaged_recovery_journals_cannot_block_revocation(self):
+        self.f.transaction.mkdir(parents=True)
+        for name in ['journal.json','journal.mirror.json']:(self.f.transaction/name).write_text('')
+        with self.assertRaises(lifecycle.RecoveryError):lifecycle.remove_for_account('user',str(self.f.config))
+        self.assertFalse(self.f.rule.exists());self.assertFalse(self.f.helper.exists())
+    def test_failed_menu_rollback_cannot_restore_revoked_access_on_retry(self):
+        f=self.f;f.fail_menu='install';real=lifecycle.recover_installation;calls=0
+        def interrupt():
+            nonlocal calls
+            calls+=1
+            if calls==2:raise OSError('Interrupted rollback')
+            return real()
+        with patch.object(lifecycle,'recover_installation',side_effect=interrupt):
+            with self.assertRaises(OSError):f.install()
+        delegate=f.user_menu
+        def fail_menu(stage,operation,record):
+            if operation=='rollback':raise ValueError('Invalid edited menu')
+            return delegate(stage,operation,record)
+        with patch.object(lifecycle,'user_menu',side_effect=fail_menu):
+            for attempt in range(2):
+                with self.assertRaises(ValueError):lifecycle.remove_for_account('user',str(f.config))
+                self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
+                self.assertEqual(lifecycle.read_journal()['phase'],'restored')
