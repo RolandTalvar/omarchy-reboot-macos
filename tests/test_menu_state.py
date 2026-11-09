@@ -94,3 +94,17 @@ class MenuTests(unittest.TestCase):
                 changed=patch_rows(raw,changes)
                 self.assertIn('// keep this comment',changed)
                 for key,value in changes.items():self.assertEqual(parse_menu(changed)[key],value)
+
+    def test_command_strings_with_comma_braces_are_never_changed(self):
+        import re
+        for command in ['cp x{.bak,}', 'echo ",]"', 'printf \"https://example.test/a,}\"']:
+            with self.subTest(command=command):
+                original=json.dumps({'system.shutdown':{'action':command}})
+                self.assertEqual(parse_menu(original)['system.shutdown']['action'],command)
+                self.menu.write_text(original);install_menu(self.root,STRINGS)
+                self.assertEqual(read_menu(self.menu)['system.shutdown-last']['action'],command)
+                # Also preserve execution through the installed upstream parser.
+                upstream=re.sub(r',(\s*[}\]])',r'\1',self.menu.read_text())
+                self.assertEqual(json.loads(upstream)['system.shutdown-last']['action'],command)
+                remove_menu(self.root)
+                self.assertEqual(self.menu.read_text(),original)

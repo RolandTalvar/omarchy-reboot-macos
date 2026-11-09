@@ -12,10 +12,50 @@ import threading
 ID = 'rolandtlvr.reboot-macos'
 KEYS = ['system.reboot-macos', 'system.shutdown', 'system.shutdown-last']
 
+def strip_jsonc(text):
+    # Preserve positions while stripping comments, then trailing commas. Both
+    # passes track string escapes so command arguments are never rewritten.
+    chars=list(text);quoted=escape=False;index=0
+    while index<len(chars):
+        ch=chars[index]
+        if quoted:
+            if escape:escape=False
+            elif ch=='\\':escape=True
+            elif ch=='"':quoted=False
+        elif ch=='"':quoted=True
+        elif ch=='/' and index+1<len(chars) and chars[index+1]=='/':
+            while index<len(chars) and chars[index]!='\n':chars[index]=' ';index+=1
+            continue
+        index+=1
+    quoted=escape=False
+    for index,ch in enumerate(chars):
+        if quoted:
+            if escape:escape=False
+            elif ch=='\\':escape=True
+            elif ch=='"':quoted=False
+        elif ch=='"':quoted=True
+        elif ch==',':
+            following=index+1
+            while following<len(chars) and chars[following].isspace():following+=1
+            if following<len(chars) and chars[following] in '}]':chars[index]=' '
+    return ''.join(chars)
+
+
+def menu_value(value):
+    # Omarchy's older menu parser uses a string-unaware trailing-comma regex.
+    # Escape commas in values we emit so it cannot alter a shell argument.
+    raw=json.dumps(value,ensure_ascii=False);result=[];quoted=escape=False
+    for ch in raw:
+        result.append('\\u002c' if quoted and ch==',' else ch)
+        if escape:escape=False
+        elif quoted and ch=='\\':escape=True
+        elif ch=='"':quoted=not quoted
+    return ''.join(result)
+
+
 def parse_menu(text):
-    # Match Omarchy's supported JSONC: whole-line comments and trailing commas.
-    text = re.sub(r'^\s*//[^\n]*(\n|$)', '', text, flags=re.M)
-    return json.loads(re.sub(r',(\s*[}\]])', r'\1', text)) if text.strip() else {}
+    text=strip_jsonc(text)
+    return json.loads(text) if text.strip() else {}
 
 def read_menu(path): return parse_menu(path.read_text()) if path.exists() else {}
 def items(data): return data.get('items', data)
@@ -168,7 +208,7 @@ def remove_menu(root):
 # accepts trailing commas, which also makes last-row deletion non-destructive.
 def patch_rows(text, changes):
     text = text or '{}\n'
-    if not re.sub(r'^\s*//[^\n]*(\n|$)', '', text, flags=re.M).strip():
+    if not strip_jsonc(text).strip():
         text = text.rstrip() + '\n{}\n'
     def skip(pos):
         while pos < len(text):
@@ -223,7 +263,7 @@ def patch_rows(text, changes):
         value=changes[key]
         if value is None:
             edits.append((start,comma+1 if comma is not None else val_end,''))
-        else:edits.append((val_start,val_end,json.dumps(value,ensure_ascii=False)))
+        else:edits.append((val_start,val_end,menu_value(value)))
     additions=[(key,value) for key,value in changes.items() if key not in existing and value is not None]
     if additions:
         remaining=[span for span in spans if changes.get(span[0],{}) is not None]
@@ -231,7 +271,7 @@ def patch_rows(text, changes):
         if remaining and remaining[-1][4] is None:
             if remaining[-1][3] == close: prefix = ','
             else: edits.append((remaining[-1][3],remaining[-1][3],','))
-        rows=',\n'.join('  '+json.dumps(key)+': '+json.dumps(value,ensure_ascii=False) for key,value in additions)
+        rows=',\n'.join('  '+json.dumps(key)+': '+menu_value(value) for key,value in additions)
         edits.append((close,close,prefix+'\n'+rows+'\n'))
     for start,end,value in sorted(edits,reverse=True):text=text[:start]+value+text[end:]
     parse_menu(text)  # refuse an invalid result before touching the file
