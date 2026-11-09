@@ -20,7 +20,13 @@ Disposable installation tests cover repeated setup, replacement of privileged co
 
 ## Independent recovery review
 
-Claude performed read-only static reviews of the privileged lifecycle and APFS/parser changes. Confirmed findings were addressed in separate commits with focused regression tests. The suite now contains 108 tests, including interrupted rollback, atomic restoration, damaged-record recovery, watcher activation before privilege grants, and stale-state reconciliation. Static review does not replace the pending hardware and linguistic checks below.
+Claude performed read-only static reviews of the privileged lifecycle and APFS/parser changes. Confirmed findings were addressed in separate commits with focused regression tests. The suite now contains 113 tests, including interrupted rollback, atomic restoration, damaged-record recovery, watcher activation before privilege grants, and stale-state reconciliation. Static review does not replace the pending hardware and linguistic checks below.
+
+## Systemd retry verification
+
+On the development machine, disposable user-manager targets reached `active` while their wanted services repeatedly failed with `Restart=on-failure`, both for `Type=oneshot` and `Type=exec`. After four seconds each service had restarted three times, with no pending jobs. The temporary units and runtime links were then removed. This checks the suspected restart-ordering behavior on the installed systemd version; it is not a full machine boot test.
+
+The cleanup unit now requires the recorded config filesystem through `RequiresMountsFor`. Config directories must still be available to the system manager; session-only encrypted or externally managed mounts need separate integration testing. The installed Omarchy `--execute` reboot path was inspected and propagates synchronous systemctl failure.
 
 ## Full boot cycle — pending user execution
 
