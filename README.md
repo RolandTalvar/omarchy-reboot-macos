@@ -25,6 +25,8 @@ python3 ~/.config/omarchy/plugins/rolandtlvr.reboot-macos/setup.py install
 
 Run setup after either installation method. Setup requests administrator authentication **once**. Normal use requires only the reboot confirmation.
 
+Setup stages and validates code, sudo rules, and systemd units before changing the installation. A durable journal saves the previous helper, permissions, menu files, and watcher state. If a later step fails, setup restores both sides; after an interrupted process, the next setup run recovers the unfinished transaction. Setup and automatic cleanup share a lock so they cannot modify the installation concurrently. A transaction that has already committed is finalized rather than partly rolled back.
+
 Omarchy has no plugin API for inserting System menu rows. Setup explicitly updates `~/.config/omarchy/extensions/omarchy-menu.jsonc`, backing it up first. It preserves unrelated entries and the existing Shutdown command and conditions, hides that original row, and moves an equivalent row after the macOS action. This preserves the requested order. The macOS row is hidden while this plugin's service is disabled.
 
 ## Languages

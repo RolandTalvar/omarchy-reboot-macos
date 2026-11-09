@@ -6,6 +6,12 @@ from unittest.mock import patch
 import lifecycle
 
 class LifecycleTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        lock = patch.object(lifecycle, 'LOCK', Path(temporary.name)/'setup.lock')
+        lock.start(); self.addCleanup(lock.stop)
+
     def test_removed_directory_triggers_cleanup(self):
         with tempfile.TemporaryDirectory() as directory:
             record=Path(directory)/'record.json'

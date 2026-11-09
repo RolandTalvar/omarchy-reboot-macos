@@ -6,7 +6,6 @@ import pwd
 import subprocess
 import sys
 from menu_state import install_menu, read_menu, remove_menu, paths, items, KEYS
-from translations import translate as t
 
 ID = 'rolandtlvr.reboot-macos'
 
@@ -24,13 +23,7 @@ def main():
             raise ValueError('Existing menu row conflicts with this plugin; resolve it before setup.')
     # Root setup records its own validated config paths, not future input.
     subprocess.run(['pkexec','/usr/bin/python3','-I',str(source/'lifecycle.py'),mode,account,str(config),str(source)],check=True)
-    if mode == 'install':
-        strings={key:t(key) for key in ['menu.label','menu.description','menu.shutdown']}
-        stock_path=Path(os.environ.get('OMARCHY_PATH','/usr/share/omarchy'))/'default/omarchy/omarchy-menu.jsonc'
-        stock=read_menu(stock_path).get('system.shutdown') if stock_path.exists() else None
-        if stock: stock['label']=strings['menu.shutdown']
-        install_menu(config/'omarchy',strings,stock)
-    else: remove_menu(config/'omarchy')
+    if mode == 'remove': remove_menu(config/'omarchy')
     print(f'Menu and privileged helper {mode} complete.')
 
 if __name__ == '__main__': main()
