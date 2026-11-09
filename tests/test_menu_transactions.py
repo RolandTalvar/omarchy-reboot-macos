@@ -38,3 +38,10 @@ class MenuTransactionTests(unittest.TestCase):
             with self.assertRaises(OSError):menu_install.install(self.root)
         self.assertEqual(self.f.menu.read_bytes(),self.f.initial_menu)
         self.assertFalse((self.root/'reboot-macos-menu-state.json').exists())
+
+    def test_rollback_preserves_a_manual_menu_deletion(self):
+        menu_install.install(self.root);self.f.menu.unlink()
+        menu_install.rollback(self.root)
+        self.assertFalse(self.f.menu.exists())
+        self.assertFalse((self.root/menu_install.SNAPSHOT).exists())
+        self.assertFalse((self.root/'reboot-macos-menu-state.json').exists())

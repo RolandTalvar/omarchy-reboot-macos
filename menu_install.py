@@ -79,7 +79,7 @@ def rollback(root):
             a,b,c=before[name],applied[name],current[name]
             if a==b or c==a: continue
             if c==b: results[name]=a
-            elif name==FILES[0]:
+            elif name==FILES[0] and c is not None:
                 original=parse_menu(text(a));installed=parse_menu(text(b));now=parse_menu(text(c))
                 merged=undo(original,installed,now)
                 changes={key:items(merged).get(key) for key in KEYS
