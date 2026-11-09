@@ -190,3 +190,20 @@ class TransactionTests(unittest.TestCase):
             with self.assertRaises(OSError):f.install()
         end=events.index(('finish',None))
         self.assertIn(('sync',f.lib),events[:end]);self.assertIn(('sync',f.helper),events[:end])
+
+    def test_failed_upgrade_cleans_old_install_if_plugin_was_removed(self):
+        f=self.fixture;f.seed_old_install();f.active=True;delegate=f.run
+        def run(*args,**kwargs):
+            result=delegate(*args,**kwargs)
+            if args[:3]==('/usr/bin/systemctl','enable','--now'):lifecycle.shutil.rmtree(f.plugin)
+            return result
+        with patch.object(lifecycle,'run',side_effect=run):
+            with self.assertRaises(ValueError):f.install()
+        self.assertFalse(f.helper.exists());self.assertFalse(f.rule.exists());self.assertFalse(f.record.exists())
+    def test_watcher_stays_active_during_an_upgrade(self):
+        f=self.fixture;f.seed_old_install();f.active=True;real=lifecycle.write_root
+        def write(path,*args,**kwargs):
+            if path==f.helper:self.assertTrue(f.active)
+            return real(path,*args,**kwargs)
+        with patch.object(lifecycle,'write_root',side_effect=write):f.install()
+        self.assertTrue(f.active)

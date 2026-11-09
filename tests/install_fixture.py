@@ -45,6 +45,11 @@ class InstallationFixture:
         self.stack.enter_context(patch.object(lifecycle,'run',side_effect=self.run))
         self.stack.enter_context(patch.object(lifecycle,'watcher_state',side_effect=lambda:{'enabled':self.enabled,'active':self.active}))
         self.stack.enter_context(patch.object(lifecycle,'user_menu',side_effect=self.user_menu))
+    @property
+    def enabled(self):
+        return self._enabled and (self.units/(lifecycle.UNIT+'.path')).exists()
+    @enabled.setter
+    def enabled(self,value): self._enabled=value
     def close(self):
         self.stack.close(); self.temp.cleanup()
     def run(self,*args,**kwargs):
@@ -55,6 +60,7 @@ class InstallationFixture:
                 self.enabled = True
                 if '--now' in args:self.active=True
             elif args[1] == 'start':self.active=True
+            elif args[1] == 'stop':self.active=False
         if self.fail_command and self.fail_command(args):
             self.fail_command = None
             raise subprocess.CalledProcessError(1,args)

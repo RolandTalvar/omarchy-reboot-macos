@@ -236,14 +236,14 @@ def recover_installation():
         finish_transaction()
         return
     if saved['phase'] == 'installing':
-        if (UNITS/(UNIT+'.path')).exists():
-            run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
         restore_artifacts(saved['artifacts'])
         saved['phase'] = 'restored'
         write_journal(saved)
     if saved['menu_started']:
         user_menu(stage, 'rollback', saved['record'])
     run('/usr/bin/systemctl', 'daemon-reload')
+    if not saved['watcher']['enabled'] or not saved['watcher']['active']:
+        stop_watcher()
     if saved['watcher']['enabled']:
         run('/usr/bin/systemctl', 'enable', UNIT+'.path')
     if saved['watcher']['active']:
@@ -302,8 +302,6 @@ def install(account, config, source):
                  'watcher':watcher_state(), 'artifacts':snapshot_artifacts(),
                  'menu_started':False}
         write_journal(saved)
-        if (UNITS/(UNIT+'.path')).exists():
-            run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
         trusted_modules = ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
                            'menu_install.py', 'translations.py']
         directory(LIB, 0o755)
@@ -338,7 +336,11 @@ def install(account, config, source):
         saved['phase'] = 'committed'
         write_journal(saved)
     except BaseException:
-        recover_installation()
+        try: recover_installation()
+        finally:
+            if RECORD.exists():
+                previous=json.loads(RECORD.read_text())
+                if not Path(previous['plugin']).exists(): cleanup_requested(previous)
         raise
     user_menu(stage, 'commit', record)
     finish_transaction()
