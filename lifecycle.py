@@ -1,6 +1,7 @@
 #!/usr/bin/python3 -I
 """Root setup and event-driven cleanup. Never run code from a removed plugin."""
 import json
+import hashlib
 import fcntl
 import os
 from pathlib import Path
@@ -101,6 +102,20 @@ def artifacts():
             UNITS/(UNIT+'.service'), LEGACY]
 
 
+def backup_digest(path):
+    digest = hashlib.sha256()
+    paths = [path] + sorted(path.rglob('*')) if path.is_dir() else [path]
+    for item in paths:
+        digest.update(str(item.relative_to(path) if item != path else '.').encode()+b'\0')
+        if item.is_symlink(): digest.update(b'link:'+os.fsencode(os.readlink(item)))
+        elif item.is_dir(): digest.update(b'dir')
+        else:
+            digest.update(b'file:')
+            with item.open('rb') as data:
+                for chunk in iter(lambda:data.read(65536), b''): digest.update(chunk)
+    return digest.hexdigest()
+
+
 def snapshot_artifacts():
     backup = TRANSACTION/'backup'
     directory(backup, 0o700, exist_ok=False)
@@ -116,6 +131,7 @@ def snapshot_artifacts():
                          uid=info.st_uid, gid=info.st_gid)
             if path.is_dir(): shutil.copytree(path, saved, symlinks=True)
             else: shutil.copy2(path, saved)
+            entry['digest'] = backup_digest(saved)
         entries.append(entry)
     sync_tree(backup)
     sync_directory(TRANSACTION)
@@ -123,6 +139,13 @@ def snapshot_artifacts():
 
 
 def restore_artifacts(entries):
+    # Validate every backup before touching any live artifact. Incomplete old
+    # cleanup must not turn a retry into destruction of a working installation.
+    for index, entry in enumerate(entries):
+        if entry['exists']:
+            saved = TRANSACTION/'backup'/str(index)
+            if not saved.exists() or 'digest' not in entry or backup_digest(saved) != entry['digest']:
+                raise RecoveryError('A transaction backup is missing or incomplete; installed files were left untouched.')
     for index, entry in enumerate(entries):
         path = Path(entry['path'])
         if path.is_dir() and not path.is_symlink(): shutil.rmtree(path)
@@ -137,6 +160,11 @@ def restore_artifacts(entries):
 
 
 def finish_transaction():
+    # Retire all recovery authority durably before deleting its dependencies.
+    # A crash during rmtree then leaves only disposable, unreferenced garbage.
+    for name in ['journal.json','journal.mirror.json']:
+        (TRANSACTION/name).unlink(missing_ok=True)
+    sync_directory(TRANSACTION)
     shutil.rmtree(TRANSACTION)
     try: TRANSACTION.parent.rmdir()
     except OSError: pass

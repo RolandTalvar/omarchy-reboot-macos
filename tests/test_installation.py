@@ -128,3 +128,42 @@ class TransactionTests(unittest.TestCase):
         with self.assertRaisesRegex(lifecycle.RecoveryError,'left untouched'):
             lifecycle.recover_installation()
         self.assertEqual(f.files(),before)
+
+    def test_interrupted_committed_cleanup_can_resume_without_staged_code(self):
+        f=self.fixture;real= lifecycle.shutil.rmtree;failed=False
+        def rmtree(path,*args,**kwargs):
+            nonlocal failed
+            if path==f.transaction and not failed:
+                failed=True;real(f.transaction/'stage');raise OSError('Interrupted cleanup')
+            return real(path,*args,**kwargs)
+        with patch.object(lifecycle.shutil,'rmtree',side_effect=rmtree):
+            with self.assertRaises(OSError):f.install()
+        before=f.files()
+        self.assertFalse((f.transaction/'journal.json').exists())
+        lifecycle.recover_installation()
+        self.assertEqual(f.files(),before)
+    def test_interrupted_rollback_cleanup_never_replays_missing_backups(self):
+        f=self.fixture;f.seed_old_install();before=f.files();f.fail_menu='install'
+        real=lifecycle.shutil.rmtree;failed=False
+        def rmtree(path,*args,**kwargs):
+            nonlocal failed
+            if path==f.transaction and not failed:
+                failed=True;real(f.transaction/'backup');raise OSError('Interrupted cleanup')
+            return real(path,*args,**kwargs)
+        with patch.object(lifecycle.shutil,'rmtree',side_effect=rmtree):
+            with self.assertRaises(OSError):f.install()
+        lifecycle.recover_installation()
+        self.assertEqual(f.files(),before)
+    def test_missing_backup_is_detected_before_any_live_artifact_is_deleted(self):
+        f=self.fixture;f.seed_old_install();real=lifecycle.recover_installation;calls=0;f.fail_menu='install'
+        def interrupt():
+            nonlocal calls
+            calls+=1
+            if calls==2:raise OSError('Interrupted rollback')
+            return real()
+        with patch.object(lifecycle,'recover_installation',side_effect=interrupt):
+            with self.assertRaises(OSError):f.install()
+        lifecycle.shutil.rmtree(f.transaction/'backup/0')
+        before=f.files()
+        with self.assertRaisesRegex(lifecycle.RecoveryError,'missing or incomplete'):real()
+        self.assertEqual(f.files(),before)
