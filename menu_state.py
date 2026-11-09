@@ -185,6 +185,19 @@ def remove_menu(root):
                 else: menu.unlink(missing_ok=True)
                 state_path.unlink()
                 return True
+        moved=rows.get(KEYS[2])
+        installed_move=state['applied'][KEYS[2]]
+        if isinstance(moved,dict) and state['before'][KEYS[2]] is None:
+            target=rows.setdefault(KEYS[1],{})
+            hidden=state['applied'][KEYS[1]]
+            missing=object()
+            for field in moved.keys() | installed_move.keys():
+                if moved.get(field,missing)!=installed_move.get(field,missing) and target.get(field,missing)==hidden.get(field,missing):
+                    if field in moved:target[field]=moved[field]
+                    else:target.pop(field,None)
+            # User edits now belong to the real Shutdown row; never leave a
+            # duplicate relocated row behind after removing the integration.
+            rows[KEYS[2]]=installed_move
         for key in KEYS:
             current,applied,previous = rows.get(key),state['applied'][key],state['before'][key]
             if current == applied:

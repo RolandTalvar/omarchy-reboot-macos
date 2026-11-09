@@ -118,3 +118,13 @@ class MenuTests(unittest.TestCase):
                 result=read_menu(self.menu)
                 self.assertEqual(result['system.shutdown'],{field:value})
                 self.assertNotIn('system.shutdown-last',result)
+
+    def test_visible_shutdown_edits_move_back_to_the_real_row(self):
+        for original in [{},{'system.shutdown':{'label':'Old label','action':'old-command'}}]:
+            for field,value in [('label','My visible label'),('action','my-new-command'),('when','my-condition')]:
+                with self.subTest(original=original,field=field):
+                    self.write(original);install_menu(self.root,STRINGS)
+                    data=read_menu(self.menu);data['system.shutdown-last'][field]=value;self.write(data)
+                    remove_menu(self.root);result=read_menu(self.menu)
+                    self.assertEqual(result['system.shutdown'][field],value)
+                    self.assertNotIn('system.shutdown-last',result)
