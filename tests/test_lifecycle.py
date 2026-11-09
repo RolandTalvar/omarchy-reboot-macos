@@ -44,3 +44,13 @@ class LifecycleTests(unittest.TestCase):
             with patch.multiple(lifecycle,LIB=root,HELPER=root/'helper',RULE=root/'rule',RECORD=root/'record',UNITS=root/'units'),patch.object(lifecycle,'run',side_effect=subprocess.CalledProcessError(1,'restore')):
                 with self.assertRaises(subprocess.CalledProcessError):lifecycle.remove({'account':'user','config':'/home/user/.config'})
                 self.assertTrue((root/'menu_state.py').exists())
+
+    def test_static_service_is_not_recorded_as_enabled_at_boot(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as directory:
+            units=Path(directory)
+            with patch.object(lifecycle,'UNITS',units),patch.object(lifecycle.subprocess,'run',return_value=subprocess.CompletedProcess([],0,stdout='static\n')):
+                self.assertFalse(lifecycle.watcher_state()['boot_enabled'])
+                wants=units/'multi-user.target.wants';wants.mkdir()
+                (wants/(lifecycle.UNIT+'.service')).symlink_to(units/(lifecycle.UNIT+'.service'))
+                self.assertTrue(lifecycle.watcher_state()['boot_enabled'])

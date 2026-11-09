@@ -131,9 +131,9 @@ def watcher_state():
         result = subprocess.run(['/usr/bin/systemctl', command, UNIT+'.path'],
                                 env=ENV, text=True, capture_output=True, check=False)
         state[key] = result.returncode == 0
-    result = subprocess.run(['/usr/bin/systemctl', 'is-enabled', UNIT+'.service'],
-                            env=ENV, text=True, capture_output=True, check=False)
-    state['boot_enabled'] = result.returncode == 0
+    # is-enabled also succeeds for static units; only our actual boot link
+    # represents enablement that rollback needs to preserve.
+    state['boot_enabled'] = (UNITS/'multi-user.target.wants'/(UNIT+'.service')).is_symlink()
     return state
 
 

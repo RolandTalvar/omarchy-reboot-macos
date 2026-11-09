@@ -20,7 +20,7 @@ Disposable installation tests cover repeated setup, replacement of privileged co
 
 ## Independent recovery review
 
-Claude performed read-only static reviews of the privileged lifecycle and APFS/parser changes. Confirmed findings were addressed in separate commits with focused regression tests. The suite now contains 107 tests, including interrupted rollback, atomic restoration, damaged-record recovery, watcher activation before privilege grants, and stale-state reconciliation. Static review does not replace the pending hardware and linguistic checks below.
+Claude performed read-only static reviews of the privileged lifecycle and APFS/parser changes. Confirmed findings were addressed in separate commits with focused regression tests. The suite now contains 108 tests, including interrupted rollback, atomic restoration, damaged-record recovery, watcher activation before privilege grants, and stale-state reconciliation. Static review does not replace the pending hardware and linguistic checks below.
 
 ## Full boot cycle — pending user execution
 
