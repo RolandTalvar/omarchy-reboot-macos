@@ -107,15 +107,19 @@ def paths(root): return root / 'extensions/omarchy-menu.jsonc', root / 'reboot-m
 def install_menu(root, strings, stock_shutdown=None):
     menu, state_path = paths(root)
     with locked(root):
-        data = read_menu(menu)
+        original = menu.read_text() if menu.exists() else ''
+        original_existed = menu.exists()
+        data = parse_menu(original)
         rows = items(data)
         if state_path.exists():
             if KEYS[0] in rows:
                 return  # Never overwrite a live integration or manual replacement.
             # A stale ownership file must not make explicit setup a no-op.
-            remove_menu(root)
-            data=read_menu(menu);rows=items(data)
-        original = menu.read_text() if menu.exists() else ''
+            reconciled = removed_text(original,json.loads(state_path.read_text())) if menu.exists() else None
+            original = reconciled or ''
+            original_existed = reconciled is not None
+            data=parse_menu(original);rows=items(data)
+        menu_base = original
         before = {key: deepcopy(rows.get(key)) for key in KEYS}
         legacy = root / 'reboot-macos-menu-backup.json'
         if legacy.exists() and (rows.get(KEYS[0]) or {}).get('action') == f'omarchy-shell {ID} reboot':
@@ -137,9 +141,9 @@ def install_menu(root, strings, stock_shutdown=None):
         rows[KEYS[1]] = {**(before[KEYS[1]] or {}), 'when':'false'}
         rows[KEYS[2]] = effective
         state = {'version':1, 'before':before, 'applied':{key:deepcopy(rows[key]) for key in KEYS},
-            'original_text':original, 'original_existed':menu.exists(), 'custom_shutdown_label':custom_shutdown_label}
+            'original_text':original, 'original_existed':original_existed, 'custom_shutdown_label':custom_shutdown_label}
         # State first: a crash before menu writing is still reversible.
-        text = patch_rows(menu.read_text() if menu.exists() else '', {key:rows[key] for key in KEYS})
+        text = patch_rows(menu_base, {key:rows[key] for key in KEYS})
         state['last_text'] = text
         write_json(state_path,state)
         atomic_write(menu,text)
@@ -171,59 +175,61 @@ def sync_strings(root, strings):
             atomic_write(menu,text)
         return changed
 
+def removed_text(text, state):
+    """Compute removal without intermediate writes during stale-state setup."""
+    data = parse_menu(text)
+    rows = items(data)
+    clean = all(rows.get(key) == state['applied'][key] for key in KEYS)
+    if clean and state['original_text'] is not None and text == state.get('last_text'):
+        # Restore bytes, including comments, when nothing else changed.
+        expected = parse_menu(state['original_text'])
+        remaining = deepcopy(data)
+        remrows = items(remaining)
+        for key in KEYS:
+            previous = state['before'][key]
+            if previous is None: remrows.pop(key,None)
+            else: remrows[key] = previous
+        if remaining == expected:
+            return state['original_text'] if state['original_existed'] else None
+    moved=rows.get(KEYS[2])
+    installed_move=state['applied'][KEYS[2]]
+    if isinstance(moved,dict) and state['before'][KEYS[2]] is None:
+        target=rows.setdefault(KEYS[1],{})
+        hidden=state['applied'][KEYS[1]]
+        missing=object()
+        for field in moved.keys() | installed_move.keys():
+            if moved.get(field,missing)!=installed_move.get(field,missing) and target.get(field,missing)==hidden.get(field,missing):
+                if field in moved:target[field]=moved[field]
+                else:target.pop(field,None)
+        # User edits now belong to the real Shutdown row; never leave a
+        # duplicate relocated row behind after removing the integration.
+        rows[KEYS[2]]=installed_move
+    for key in KEYS:
+        current,applied,previous = rows.get(key),state['applied'][key],state['before'][key]
+        if current == applied:
+            if previous is None: rows.pop(key,None)
+            else: rows[key] = previous
+        elif isinstance(current,dict):
+            if previous is None and applied.get('action') is not None and current.get('action') == applied['action']:
+                rows.pop(key,None)  # Our newly introduced command, not a user replacement.
+            else:
+                for field,value in applied.items():
+                    if current.get(field) == value:
+                        if previous is not None and field in previous: current[field] = previous[field]
+                        else: current.pop(field,None)
+                if not current: rows.pop(key,None)
+    return patch_rows(text,{key:rows.get(key) for key in KEYS})
+
+
 def remove_menu(root):
     menu,state_path = paths(root)
     with locked(root):
         if not state_path.exists(): return False
         state = json.loads(state_path.read_text())
-        if not menu.exists():
-            unlink_synced(state_path)
-            return True
-        data = read_menu(menu)
-        rows = items(data)
-        clean = all(rows.get(key) == state['applied'][key] for key in KEYS)
-        if clean and state['original_text'] is not None and menu.read_text() == state.get('last_text'):
-            # Restore bytes, including comments, when nothing else changed.
-            expected = parse_menu(state['original_text'])
-            remaining = deepcopy(data)
-            remrows = items(remaining)
-            for key in KEYS:
-                previous = state['before'][key]
-                if previous is None: remrows.pop(key,None)
-                else: remrows[key] = previous
-            if remaining == expected:
-                if state['original_existed']: atomic_write(menu,state['original_text'])
-                else: unlink_synced(menu)
-                unlink_synced(state_path)
-                return True
-        moved=rows.get(KEYS[2])
-        installed_move=state['applied'][KEYS[2]]
-        if isinstance(moved,dict) and state['before'][KEYS[2]] is None:
-            target=rows.setdefault(KEYS[1],{})
-            hidden=state['applied'][KEYS[1]]
-            missing=object()
-            for field in moved.keys() | installed_move.keys():
-                if moved.get(field,missing)!=installed_move.get(field,missing) and target.get(field,missing)==hidden.get(field,missing):
-                    if field in moved:target[field]=moved[field]
-                    else:target.pop(field,None)
-            # User edits now belong to the real Shutdown row; never leave a
-            # duplicate relocated row behind after removing the integration.
-            rows[KEYS[2]]=installed_move
-        for key in KEYS:
-            current,applied,previous = rows.get(key),state['applied'][key],state['before'][key]
-            if current == applied:
-                if previous is None: rows.pop(key,None)
-                else: rows[key] = previous
-            elif isinstance(current,dict):
-                if previous is None and applied.get('action') is not None and current.get('action') == applied['action']:
-                    rows.pop(key,None)  # Our newly introduced command, not a user replacement.
-                else:
-                    for field,value in applied.items():
-                        if current.get(field) == value:
-                            if previous is not None and field in previous: current[field] = previous[field]
-                            else: current.pop(field,None)
-                    if not current: rows.pop(key,None)
-        atomic_write(menu,patch_rows(menu.read_text(),{key:rows.get(key) for key in KEYS}))
+        if menu.exists():
+            text = removed_text(menu.read_text(), state)
+            if text is None: unlink_synced(menu)
+            else: atomic_write(menu,text)
         unlink_synced(state_path)
         return True
 

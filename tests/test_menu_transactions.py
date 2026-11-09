@@ -66,3 +66,24 @@ class MenuTransactionTests(unittest.TestCase):
         # Simulate termination before the applied snapshot can be persisted.
         menu_install.rollback(self.root)
         self.assertEqual(menu_install.capture(self.root),before)
+
+    def test_stale_reconcile_does_not_write_intermediate_menu(self):
+        for point in ['state','menu']:
+            with self.subTest(point=point):
+                menu_install.install(self.root);menu_install.commit(self.root)
+                rows=menu_state.read_menu(self.f.menu);rows.pop('system.reboot-macos')
+                self.f.menu.write_text(json.dumps(rows));before=menu_install.capture(self.root)
+                menu_install.begin(self.root);write=menu_state.atomic_write;calls=[]
+                def interrupted(path,value):
+                    calls.append(path)
+                    if point=='state' and path==self.root/menu_install.FILES[1]:
+                        raise SystemExit('Before new state')
+                    if point=='menu' and path==self.f.menu:
+                        raise SystemExit('After new state, before new menu')
+                    return write(path,value)
+                with patch.object(menu_state,'atomic_write',side_effect=interrupted):
+                    with self.assertRaises(SystemExit):
+                        menu_state.install_menu(self.root,{'menu.label':'macOS','menu.description':'Once','menu.shutdown':'Shutdown'})
+                self.assertEqual(self.f.menu.read_bytes(),__import__('base64').b64decode(before[menu_install.FILES[0]]['data']))
+                menu_install.rollback(self.root)
+                self.assertEqual(menu_install.capture(self.root),before)
