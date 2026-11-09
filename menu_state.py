@@ -51,11 +51,11 @@ def install_menu(root, strings, stock_shutdown=None):
         original = menu.read_text() if menu.exists() else ''
         before = {key: deepcopy(rows.get(key)) for key in KEYS}
         legacy = root / 'reboot-macos-menu-backup.json'
-        if legacy.exists() and rows.get(KEYS[0], {}).get('action') == f'omarchy-shell {ID} reboot':
+        if legacy.exists() and (rows.get(KEYS[0]) or {}).get('action') == f'omarchy-shell {ID} reboot':
             # v0.1/0.2 could back up our pre-plugin local customization. Retire
             # exactly that known customization; retain genuine custom values.
             old = json.loads(legacy.read_text())
-            if old.get(KEYS[0], {}).get('action') == 'omarchy-launch-floating-terminal-with-presentation bash ~/.config/omarchy/scripts/restart-macos':
+            if (old.get(KEYS[0]) or {}).get('action') == 'omarchy-launch-floating-terminal-with-presentation bash ~/.config/omarchy/scripts/restart-macos':
                 before = {key: None for key in KEYS}
             else:
                 before = {key: old.get(key) for key in KEYS}

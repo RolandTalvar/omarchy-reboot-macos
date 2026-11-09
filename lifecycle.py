@@ -187,9 +187,17 @@ def install(account, config, source):
         write_root(TRANSACTION/'journal.json', json.dumps(saved), 0o600)
         if (UNITS/(UNIT+'.path')).exists():
             run('/usr/bin/systemctl', 'disable', '--now', UNIT+'.path')
-        for name in ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
-                     'menu_install.py', 'translations.py']:
+        trusted_modules = ['apfs_metadata.py', 'menu_state.py', 'lifecycle.py',
+                           'menu_install.py', 'translations.py']
+        for name in trusted_modules:
             write_root(LIB/name, (stage/name).read_text())
+        # This directory is an installed snapshot, not an overlay. Obsolete
+        # modules and bytecode must not survive a successful upgrade. The
+        # transaction still restores the whole old tree if a later step fails.
+        for entry in LIB.iterdir():
+            if entry.name not in trusted_modules:
+                if entry.is_dir() and not entry.is_symlink(): shutil.rmtree(entry)
+                else: entry.unlink()
         write_root(HELPER, (stage/'boot_helper.py').read_text(), 0o755)
         write_root(RULE, (stage/'sudoers').read_text(), 0o440)
         write_root(RECORD, json.dumps(record)+'\n')

@@ -14,6 +14,10 @@
 - Native confirmation and volume-picker previews rendered in English, Estonian, Arabic, and Hebrew. Layout mirrored for Arabic/Hebrew, long text wrapped, and markup-shaped volume names remained literal text. This is rendering verification, not native-speaker linguistic review.
 - Live menu labels switched from Estonian to French in an isolated QML instance without a restart; the desktop user's language was unchanged.
 
+## Upgrade regression coverage
+
+Disposable installation tests cover repeated setup, replacement of privileged code only during explicit setup, preservation of original removal state and user edits, migration of legacy menu backups, removal of obsolete trusted modules, and retry after an injected upgrade failure. These checks run in CI without changing the host installation or boot target.
+
 ## Full boot cycle — pending user execution
 
 This check interrupts the session. Save work first and perform it when ready:

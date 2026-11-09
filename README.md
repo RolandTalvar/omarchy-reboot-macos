@@ -29,6 +29,15 @@ Setup stages and validates code, sudo rules, and systemd units before changing t
 
 Omarchy has no plugin API for inserting System menu rows. Setup explicitly updates `~/.config/omarchy/extensions/omarchy-menu.jsonc`, backing it up first. It preserves unrelated entries and the existing Shutdown command and conditions, hides that original row, and moves an equivalent row after the macOS action. This preserves the requested order. The macOS row is hidden while this plugin's service is disabled.
 
+## Upgrade
+
+```sh
+omarchy plugin update rolandtlvr.reboot-macos
+python3 ~/.config/omarchy/plugins/rolandtlvr.reboot-macos/setup.py install
+```
+
+Updating the checkout changes the UI files, but never replaces the administrator-owned helper automatically. Rerun setup to apply privileged updates. Setup preserves the original removal backup and your menu customizations, replaces the trusted helper snapshot, and removes obsolete modules. A failed upgrade restores the previous files, permissions, menu, and watcher state; retrying does not overwrite the original removal backup.
+
 ## Languages
 
 The menu entry, description, confirmation, Yes/No buttons, volume picker, and user-facing failure message follow **Setup > Language**. Catalogs cover all 50 current Omarchy languages. The menu updates live without a shell restart; new terminal actions read the current selection. Missing translations fall back to the base language, then English. Disk names are never translated. The native dialog mirrors right-to-left layouts, wraps text, isolates mixed-direction volume names, and treats window data as plain text. Technical diagnostics and administrator setup output remain in English.
