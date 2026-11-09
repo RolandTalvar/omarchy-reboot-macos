@@ -268,3 +268,13 @@ class TransactionTests(unittest.TestCase):
                 self.assertTrue(f.record.exists())
             return write(path,*args,**kwargs)
         with patch.object(lifecycle,'write_root',side_effect=checked):f.install()
+
+    def test_first_install_rollback_revokes_before_removing_cleanup_code(self):
+        f=self.fixture;remove=lifecycle.shutil.rmtree
+        def checked(path,*args,**kwargs):
+            if Path(path)==f.lib:
+                self.assertFalse(f.rule.exists());self.assertFalse(f.helper.exists())
+            return remove(path,*args,**kwargs)
+        f.fail_menu='install'
+        with patch.object(lifecycle.shutil,'rmtree',side_effect=checked):
+            with self.assertRaises(OSError):f.install()

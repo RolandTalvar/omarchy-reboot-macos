@@ -172,7 +172,8 @@ def restore_artifacts(entries):
             saved = TRANSACTION/'backup'/str(index)
             if not saved.exists() or 'digest' not in entry or backup_digest(saved) != entry['digest']:
                 raise RecoveryError('A transaction backup is missing or incomplete; installed files were left untouched.')
-    for index, entry in enumerate(entries):
+    ordered = sorted(enumerate(entries), key=lambda pair: pair[1]['path'] == str(LIB) and not pair[1]['exists'])
+    for index, entry in ordered:
         path = Path(entry['path'])
         if entry['exists']:
             saved = TRANSACTION/'backup'/str(index)
