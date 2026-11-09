@@ -14,7 +14,7 @@ The action detects a single boot volume named `macOS …`, `Macintosh …`, or `
 
 ## Install
 
-Install this repository with `omarchy plugin add <git-url> --enable`, or copy the plugin folder into `~/.config/omarchy/plugins/rolandtlvr.reboot-macos/` and run:
+Install this repository with `omarchy plugin add https://github.com/RolandTalvar/omarchy-reboot-macos.git --enable`, or copy the plugin folder into `~/.config/omarchy/plugins/rolandtlvr.reboot-macos/` and run:
 
 ```sh
 omarchy plugin enable rolandtlvr.reboot-macos
