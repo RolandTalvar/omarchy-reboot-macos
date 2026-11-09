@@ -335,12 +335,19 @@ def install(account, config, source):
         # deleting snapshots so an interrupted cleanup never rolls back half.
         saved['phase'] = 'committed'
         write_journal(saved)
-    except BaseException:
+    except BaseException as error:
+        committed=False
+        if TRANSACTION.exists():
+            try: committed=read_journal()['phase']=='committed'
+            except RecoveryError: pass
         try: recover_installation()
         finally:
             if RECORD.exists():
                 previous=json.loads(RECORD.read_text())
                 if not Path(previous['plugin']).exists(): cleanup_requested(previous)
+        if committed and RECORD.exists():
+            print(f'Installation committed and finalized successfully; redundant journal warning: {error}',file=sys.stderr)
+            return
         raise
     user_menu(stage, 'commit', record)
     finish_transaction()

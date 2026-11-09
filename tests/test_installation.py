@@ -207,3 +207,13 @@ class TransactionTests(unittest.TestCase):
             return real(path,*args,**kwargs)
         with patch.object(lifecycle,'write_root',side_effect=write):f.install()
         self.assertTrue(f.active)
+
+    def test_committed_primary_with_failed_mirror_reports_success_after_finalizing(self):
+        f=self.fixture;real=lifecycle.write_root;failed=False
+        def write(path,text,*args,**kwargs):
+            nonlocal failed
+            if path==f.transaction/'journal.mirror.json' and '"phase": "committed"' in text and not failed:
+                failed=True;raise OSError('Injected mirror failure')
+            return real(path,text,*args,**kwargs)
+        with patch.object(lifecycle,'write_root',side_effect=write):f.install()
+        self.assertTrue(f.helper.exists());self.assertTrue(f.record.exists());self.assertFalse(f.transaction.exists())
