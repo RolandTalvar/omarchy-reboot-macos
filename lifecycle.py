@@ -327,6 +327,8 @@ def install(account, config, source):
         if not (plugin/'manifest.json').is_file():
             raise ValueError('Plugin was removed during installation')
         run('/usr/bin/systemctl', 'enable', '--now', UNIT+'.path')
+        if not (plugin/'manifest.json').is_file():
+            raise ValueError('Plugin was removed while enabling its watcher')
         # Both sides are now installed. Persist the commit decision before
         # deleting snapshots so an interrupted cleanup never rolls back half.
         saved['phase'] = 'committed'

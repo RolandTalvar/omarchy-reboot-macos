@@ -167,3 +167,16 @@ class TransactionTests(unittest.TestCase):
         before=f.files()
         with self.assertRaisesRegex(lifecycle.RecoveryError,'missing or incomplete'):real()
         self.assertEqual(f.files(),before)
+
+    def test_removal_during_watcher_activation_rolls_back_installation(self):
+        f=self.fixture;delegate=f.run
+        def run(*args,**kwargs):
+            result=delegate(*args,**kwargs)
+            if args[:3]==('/usr/bin/systemctl','enable','--now'):
+                lifecycle.shutil.rmtree(f.plugin)
+            return result
+        with patch.object(lifecycle,'run',side_effect=run):
+            with self.assertRaisesRegex(ValueError,'while enabling'):f.install()
+        self.assertFalse(f.helper.exists());self.assertFalse(f.rule.exists())
+        self.assertFalse(f.record.exists());self.assertFalse(f.enabled or f.active)
+        self.assert_clean_rollback()
