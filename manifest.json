@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "rolandtlvr.reboot-macos",
+  "name": "Reboot into macOS",
+  "version": "0.1.0",
+  "author": "Roland Talvar",
+  "description": "System menu action to reboot into an automatically detected macOS volume once.",
+  "kinds": ["service"],
+  "entryPoints": {"service": "Service.qml"}
+}
