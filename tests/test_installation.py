@@ -278,3 +278,12 @@ class TransactionTests(unittest.TestCase):
         f.fail_menu='install'
         with patch.object(lifecycle.shutil,'rmtree',side_effect=checked):
             with self.assertRaises(OSError):f.install()
+
+    def test_enablement_directory_is_synced_before_grants(self):
+        f=self.fixture;wants=f.units/'multi-user.target.wants';wants.mkdir()
+        synced=[];sync=lifecycle.sync_directory;write=lifecycle.write_root
+        def record(path):synced.append(path);sync(path)
+        def checked(path,*args,**kwargs):
+            if path==f.rule:self.assertIn(wants,synced)
+            return write(path,*args,**kwargs)
+        with patch.object(lifecycle,'sync_directory',side_effect=record),patch.object(lifecycle,'write_root',side_effect=checked):f.install()

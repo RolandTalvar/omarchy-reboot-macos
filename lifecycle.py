@@ -73,6 +73,12 @@ def unlink_synced(path):
         sync_directory(path.parent)
 
 
+def sync_enablement():
+    wants = UNITS/'multi-user.target.wants'
+    if wants.exists(): sync_directory(wants)
+    sync_directory(UNITS)
+
+
 def stop_watcher():
     if (UNITS/(UNIT+'.path')).exists():
         run('/usr/bin/systemctl','disable','--now',UNIT+'.path')
@@ -356,6 +362,7 @@ def install(account, config, source):
         # First installations need a persistent removal watcher before any
         # passwordless access is granted, including across a power loss.
         run('/usr/bin/systemctl', 'enable', '--now', UNIT+'.path')
+        sync_enablement()
         if not (plugin/'manifest.json').is_file():
             raise ValueError('Plugin was removed while enabling its watcher')
         write_root(HELPER, (stage/'boot_helper.py').read_text(), 0o755)
