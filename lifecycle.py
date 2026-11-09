@@ -345,6 +345,11 @@ def install(account, config, source):
     recover_installation()
     if RECORD.exists() and json.loads(RECORD.read_text())['account'] != account:
         raise ValueError('This helper is already installed for another user')
+    if RECORD.exists():
+        previous=json.loads(RECORD.read_text())
+        if not Path(previous['plugin']).exists():
+            cleanup_requested(previous)
+            raise ValueError('Removed plugin cleanup completed; install the Omarchy plugin first')
     config = Path(config).resolve()
     if any(ord(ch) < 32 for ch in str(config)): raise ValueError('Unsupported config path')
     plugin = config/'omarchy/plugins/rolandtlvr.reboot-macos'

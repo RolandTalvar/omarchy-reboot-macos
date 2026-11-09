@@ -303,3 +303,16 @@ class TransactionTests(unittest.TestCase):
         self.assertFalse(link.is_symlink())
         self.assertIn(('/usr/bin/systemctl','disable',lifecycle.UNIT+'.service'),f.calls)
         self.assertNotIn(('/usr/bin/systemctl','stop',lifecycle.UNIT+'.service'),f.calls)
+
+    def test_fresh_setup_finishes_cleanup_of_an_absent_plugin(self):
+        f=self.fixture;f.install()
+        import shutil
+        shutil.rmtree(f.plugin)
+        run=f.run
+        def actual_menu_remove(*args,**kwargs):
+            if args[0]=='/usr/bin/runuser':menu_state.remove_menu(f.config/'omarchy')
+            return run(*args,**kwargs)
+        with patch.object(lifecycle,'run',side_effect=actual_menu_remove):
+            with self.assertRaisesRegex(ValueError,'cleanup completed'):f.install()
+        self.assertFalse(f.lib.exists());self.assertFalse(f.record.exists())
+        self.assertFalse(f.rule.exists());self.assertEqual(f.menu.read_bytes(),f.initial_menu)
